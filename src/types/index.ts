@@ -43,3 +43,16 @@ export interface Transaction {
   status: 'Completed' | 'Pending' | 'Failed' | 'Cancelled';
   counterparty: string; // Who the trade was with
 }
+
+export interface WalletTransaction {
+  id: string;
+  type: 'Deposit' | 'Withdrawal';
+  assetName: string;
+  assetSymbol: string; // e.g., BTC, ETH, USD
+  assetIcon?: LucideIcon | string;
+  amount: number;
+  date: string; // ISO string
+  status: 'Completed' | 'Pending' | 'Failed' | 'Cancelled';
+  network?: string; // Optional, for crypto transactions
+  transactionId?: string; // Optional, blockchain transaction ID or reference
+}

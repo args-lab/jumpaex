@@ -1,5 +1,5 @@
-import type { Asset, Region, Currency, BlockchainNetwork, Transaction } from '@/types';
-import { Bitcoin, Landmark, Waves, CircleDollarSign, Replace } from 'lucide-react';
+import type { Asset, Region, Currency, BlockchainNetwork, Transaction, WalletTransaction } from '@/types';
+import { Bitcoin, Landmark, Waves, CircleDollarSign, Replace, DollarSign } from 'lucide-react';
 
 export const mockRegions: Region[] = [
   { id: 'global', name: 'Global' },
@@ -167,5 +167,67 @@ export const mockTransactions: Transaction[] = [
     date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
     status: 'Cancelled',
     counterparty: 'UserB',
+  },
+];
+
+
+export const mockWalletTransactions: WalletTransaction[] = [
+  {
+    id: 'wt1',
+    type: 'Deposit',
+    assetName: 'US Dollar',
+    assetSymbol: 'USD',
+    assetIcon: DollarSign,
+    amount: 500,
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    status: 'Completed',
+    transactionId: 'DEPO_USD_12345',
+  },
+  {
+    id: 'wt2',
+    type: 'Withdrawal',
+    assetName: 'Bitcoin',
+    assetSymbol: 'BTC',
+    assetIcon: Bitcoin,
+    amount: 0.01,
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    status: 'Completed',
+    network: 'Bitcoin',
+    transactionId: 'WITH_BTC_67890',
+  },
+  {
+    id: 'wt3',
+    type: 'Deposit',
+    assetName: 'Ethereum',
+    assetSymbol: 'ETH',
+    assetIcon: Landmark,
+    amount: 0.5,
+    date: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
+    status: 'Pending',
+    network: 'Ethereum',
+    transactionId: 'DEPO_ETH_ABCDE',
+  },
+  {
+    id: 'wt4',
+    type: 'Withdrawal',
+    assetName: 'Euro',
+    assetSymbol: 'EUR',
+    assetIcon: DollarSign, // Using DollarSign for generic fiat
+    amount: 200,
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    status: 'Failed',
+    transactionId: 'WITH_EUR_FGHIJ',
+  },
+    {
+    id: 'wt5',
+    type: 'Deposit',
+    assetName: 'Solana',
+    assetSymbol: 'SOL',
+    assetIcon: Waves,
+    amount: 10,
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+    status: 'Cancelled',
+    network: 'Solana',
+    transactionId: 'DEPO_SOL_KLMNO',
   },
 ];
