@@ -21,6 +21,7 @@ import { mockWalletTransactions } from '@/data/mock';
 import { ArrowDownToLine, ArrowUpFromLine, CheckCircle, Clock, XCircle, AlertCircle, DollarSign, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 import { format as formatDateFns } from 'date-fns';
+import { DepositModal } from '@/components/app/deposit-modal';
 
 // Helper to determine decimal places for wallet transactions
 const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
@@ -48,6 +49,7 @@ interface FormattedWalletTransaction extends WalletTransactionType {
 
 export default function WalletPage() {
   const [formattedWalletTransactions, setFormattedWalletTransactions] = useState<FormattedWalletTransaction[]>([]);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
 
   useEffect(() => {
     const locale = undefined; // browser default
@@ -63,9 +65,6 @@ export default function WalletPage() {
   const transactionsToDisplay = formattedWalletTransactions.length > 0
     ? formattedWalletTransactions
     : mockWalletTransactions.map(tx => {
-        // tx.date is an ISO string like "2024-06-07T12:30:00.000Z"
-        // For SSR and initial client render, create a consistent UTC-based string.
-        // Example: "2024-06-07 12:30"
         const ssrDisplayDate = tx.date.substring(0, 10) + ' ' + tx.date.substring(11, 16);
         
         return {
@@ -118,7 +117,11 @@ export default function WalletPage() {
         <div className="mb-8 p-4 sm:p-6 bg-card rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4 font-headline">Actions</h2>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button size="lg" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+            <Button 
+              size="lg" 
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => setIsDepositModalOpen(true)}
+            >
               <ArrowDownToLine className="mr-2 h-5 w-5" /> Deposit Funds
             </Button>
             <Button variant="destructive" size="lg" className="flex-1 bg-red-600 hover:bg-red-700 text-white">
@@ -192,6 +195,7 @@ export default function WalletPage() {
         </div>
       </main>
       <BottomNavigationBar />
+      <DepositModal isOpen={isDepositModalOpen} onOpenChange={setIsDepositModalOpen} />
     </div>
   );
 }

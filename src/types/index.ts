@@ -56,3 +56,11 @@ export interface WalletTransaction {
   network?: string; // Optional, for crypto transactions
   transactionId?: string; // Optional, blockchain transaction ID or reference
 }
+
+export interface DepositableAsset {
+  id: string; // e.g., 'btc', 'eth', 'usdt'
+  name: string; // e.g., 'Bitcoin', 'Ethereum', 'Tether'
+  symbol: string; // e.g., 'BTC', 'ETH', 'USDT'
+  icon?: LucideIcon | string;
+  supportedNetworks: string[]; // Array of network IDs (e.g., ['bitcoin'], ['ethereum', 'bsc'])
+}
