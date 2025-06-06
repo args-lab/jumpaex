@@ -42,13 +42,13 @@ export default function HomePage() {
         <div className="mb-8 p-4 sm:p-6 bg-card rounded-lg shadow">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
             <h2 className="text-xl font-headline font-semibold mb-2 sm:mb-0">Filters</h2>
-            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="sm:hidden">
+            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="md:hidden">
               <SlidersHorizontal className="mr-2 h-4 w-4" />
               {showFilters ? 'Hide' : 'Show'} Filters
             </Button>
           </div>
           {showFilters && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <RegionSelector
                 regions={mockRegions}
                 selectedRegion={selectedRegion}
