@@ -10,8 +10,8 @@ import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { User, MessageSquare, ShieldCheck, Clock, ArrowLeft, AlertTriangle, ShoppingCart } from 'lucide-react';
-import type { Asset, MockSeller, Currency as CurrencyType } from '@/types';
+import { User, MessageSquare, ShieldCheck, Clock, ArrowLeft, AlertTriangle, ShoppingCart, Tag } from 'lucide-react';
+import type { Asset, MockSeller } from '@/types';
 import { mockAssets, mockSellers, getAssetPriceInUSD, MOCK_CONVERSION_RATES, mockCurrencies } from '@/data/mock';
 
 const getAssetSymbol = (assetName: string): string => {
@@ -44,21 +44,31 @@ const formatCryptoAmount = (amount: number, locale: string | undefined, assetSym
 };
 
 // Formats the asset's original price in its native currency
-const formatAssetNativePrice = (price: number, currency: string, locale: string | undefined, assetName: string) => {
-  const symbol = getAssetSymbol(assetName); // e.g. "Bitcoin" -> "BTC"
-  // More precision for BTC/ETH, otherwise 2 for most fiat/stablecoins
-  const minFractionDigits = (symbol === 'BTC' || symbol === 'ETH') ? 4 : 2; 
-  const maxFractionDigits = (symbol === 'BTC' || symbol === 'ETH') ? 8 : 2;
+const formatAssetNativePrice = (price: number, currency: string, locale: string | undefined, assetNameOrSymbol: string) => {
+  const symbol = getAssetSymbol(assetNameOrSymbol); // e.g. "Bitcoin" -> "BTC"
+  
+  let minFractionDigitsDefault = 2;
+  let maxFractionDigitsDefault = 2;
+
+  // More precision for crypto, standard for fiat/stablecoins
+  if (['BTC', 'ETH'].includes(symbol.toUpperCase())) {
+    minFractionDigitsDefault = 4;
+    maxFractionDigitsDefault = 8;
+  } else if (!mockCurrencies.find(c => c.symbol.toUpperCase() === currency.toUpperCase() || c.id.toUpperCase() === currency.toUpperCase())) {
+    // For other cryptos not in primary list, use more precision
+    minFractionDigitsDefault = 2;
+    maxFractionDigitsDefault = 6;
+  }
 
 
   if (currency.toUpperCase() === 'USDT') {
-    return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits })} USDT`;
+    return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigitsDefault, maximumFractionDigits: maxFractionDigitsDefault })} USDT`;
   }
   try {
-    return price.toLocaleString(locale, { style: 'currency', currency: currency, minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits });
+    return price.toLocaleString(locale, { style: 'currency', currency: currency, minimumFractionDigits: minFractionDigitsDefault, maximumFractionDigits: maxFractionDigitsDefault });
   } catch (e) {
     // Fallback for unrecognized currency codes
-    return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits })} ${currency.toUpperCase()}`;
+    return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigitsDefault, maximumFractionDigits: maxFractionDigitsDefault })} ${currency.toUpperCase()}`;
   }
 };
 
@@ -66,9 +76,9 @@ const formatAssetNativePrice = (price: number, currency: string, locale: string 
 const formatConvertedDisplayPrice = (value: number, currencyCode: string, locale: string | undefined) => {
     const targetCurrencyInfo = mockCurrencies.find(c => c.id.toUpperCase() === currencyCode.toUpperCase());
     const displaySymbol = targetCurrencyInfo?.symbol || currencyCode.toUpperCase();
-    // Fiat usually 2 decimal places.
-    const minFractionDigits = 2;
-    const maxFractionDigits = 2;
+    
+    let minFractionDigits = 2;
+    let maxFractionDigits = 2;
 
     if (targetCurrencyInfo && targetCurrencyInfo.id.toUpperCase() !== 'USDT') { // USDT is not a standard 'currency' style
          try {
@@ -91,9 +101,7 @@ export default function FindSellerPage() {
 
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined); 
   const [locale, setLocale] = useState<string | undefined>(undefined);
-  const [convertedPriceFormatted, setConvertedPriceFormatted] = useState<string | null>(null);
-
-
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setLocale(navigator.language);
@@ -109,25 +117,8 @@ export default function FindSellerPage() {
 
   const assetPriceInUSD = useMemo(() => {
     if (!asset) return 0;
-    // getAssetPriceInUSD already handles conversion from asset.currency to USD
     return getAssetPriceInUSD(asset.id, mockAssets); 
   }, [asset]);
-
-  useEffect(() => {
-    if (asset && assetPriceInUSD > 0 && locale !== undefined) {
-        const targetRateToUSD = MOCK_CONVERSION_RATES[displayCurrencyId.toUpperCase()];
-        if (targetRateToUSD) {
-            const convertedValue = assetPriceInUSD / targetRateToUSD;
-            setConvertedPriceFormatted(formatConvertedDisplayPrice(convertedValue, displayCurrencyId, locale));
-        } else if (displayCurrencyId.toUpperCase() === 'USD') { // If target is USD and no specific rate (implies 1)
-            setConvertedPriceFormatted(formatConvertedDisplayPrice(assetPriceInUSD, 'USD', locale));
-        } else {
-            setConvertedPriceFormatted(null); // Cannot convert
-        }
-    } else {
-        setConvertedPriceFormatted(null);
-    }
-  }, [asset, assetPriceInUSD, displayCurrencyId, locale]);
 
 
   if (asset === undefined) { // Still loading asset data
@@ -168,9 +159,7 @@ export default function FindSellerPage() {
   }
   
   const assetSymbolDisplay = getAssetSymbol(asset.name);
-  // This will be the asset's price in its native currency (e.g., 60000 USDT, or 55000 EUR)
-  const displayAssetNativePrice = formatAssetNativePrice(asset.price, asset.currency, locale, asset.name);
-
+  
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -190,7 +179,6 @@ export default function FindSellerPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockSellers.map((seller) => {
-            // Calculate min/max sell in asset's units using the asset's USD price
             const minSellInAsset = assetPriceInUSD > 0 ? seller.minSellUSD / assetPriceInUSD : 0;
             const maxSellInAsset = assetPriceInUSD > 0 ? seller.maxSellUSD / assetPriceInUSD : 0;
             
@@ -204,7 +192,33 @@ export default function FindSellerPage() {
                 minSellInDisplayCurrencyFormatted = formatConvertedDisplayPrice(minSellInDisplayCurrency, displayCurrencyId, locale);
                 maxSellInDisplayCurrencyFormatted = formatConvertedDisplayPrice(maxSellInDisplayCurrency, displayCurrencyId, locale);
             }
-            const displayCurrencyName = mockCurrencies.find(c => c.id.toLowerCase() === displayCurrencyId.toLowerCase())?.name || displayCurrencyId.toUpperCase();
+            const displayCurrencyInfo = mockCurrencies.find(c => c.id.toLowerCase() === displayCurrencyId.toLowerCase());
+            const displayCurrencyName = displayCurrencyInfo?.name || displayCurrencyId.toUpperCase();
+            const displayCurrencySymbol = displayCurrencyInfo?.symbol || displayCurrencyId.toUpperCase();
+            
+            let desiredPriceInAssetCurrencyFormatted: string | null = null;
+            let desiredPriceInSelectedDisplayCurrencyFormatted: string | null = null;
+
+            if (seller.desiredPricePerAssetUSD !== undefined) {
+              // Convert seller's USD desired price to the asset's original currency (e.g., USDT, EUR)
+              const assetOriginalCurrencyRateToUSD = MOCK_CONVERSION_RATES[asset.currency.toUpperCase()] || (asset.currency.toUpperCase() === 'USD' ? 1 : 0);
+              if (assetOriginalCurrencyRateToUSD > 0) {
+                const desiredPriceInAssetOriginalCurrency = seller.desiredPricePerAssetUSD / assetOriginalCurrencyRateToUSD;
+                desiredPriceInAssetCurrencyFormatted = formatAssetNativePrice(desiredPriceInAssetOriginalCurrency, asset.currency, locale, assetSymbolDisplay);
+              } else if (asset.currency.toUpperCase() === 'USDT' && MOCK_CONVERSION_RATES['USDT'] === 1) { // Handle USDT case directly
+                desiredPriceInAssetCurrencyFormatted = formatAssetNativePrice(seller.desiredPricePerAssetUSD, 'USDT', locale, assetSymbolDisplay);
+              }
+
+
+              // Convert seller's USD desired price to the user's selected display currency
+              if (targetRateToUSD) {
+                const desiredPriceInSelectedDisplay = seller.desiredPricePerAssetUSD / targetRateToUSD;
+                desiredPriceInSelectedDisplayCurrencyFormatted = formatConvertedDisplayPrice(desiredPriceInSelectedDisplay, displayCurrencyId, locale);
+              } else if (displayCurrencyId.toUpperCase() === 'USD') { // If display currency is USD
+                 desiredPriceInSelectedDisplayCurrencyFormatted = formatConvertedDisplayPrice(seller.desiredPricePerAssetUSD, 'USD', locale);
+              }
+            }
+
 
             return (
               <Card key={seller.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow">
@@ -214,7 +228,7 @@ export default function FindSellerPage() {
                       <User className="h-8 w-8 text-primary" />
                       <CardTitle className="text-lg font-semibold">{seller.name}</CardTitle>
                     </div>
-                    {asset.seller === seller.name && ( // Highlight if this is the original lister from mockAssets
+                    {asset.seller === seller.name && ( 
                       <span className="text-xs bg-primary/10 text-primary font-medium px-2 py-0.5 rounded-full">Original Lister</span>
                     )}
                   </div>
@@ -232,11 +246,33 @@ export default function FindSellerPage() {
                       Avg. Trade Time: {seller.avgTradeTime}
                     </div>
                   )}
+                  
+                  {/* Seller's Desired Price */}
+                  {desiredPriceInAssetCurrencyFormatted && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Tag className="mr-2 h-4 w-4 text-teal-500" />
+                      Asking Price: {desiredPriceInAssetCurrencyFormatted}
+                       {desiredPriceInSelectedDisplayCurrencyFormatted && desiredPriceInAssetCurrencyFormatted !== desiredPriceInSelectedDisplayCurrencyFormatted && asset.currency.toUpperCase() !== displayCurrencyId.toUpperCase() && (
+                        <span className="ml-1 text-xs">
+                          (approx. {desiredPriceInSelectedDisplayCurrencyFormatted})
+                        </span>
+                      )}
+                       {!desiredPriceInSelectedDisplayCurrencyFormatted && displayCurrencyId.toUpperCase() !== 'USD' && asset.currency.toUpperCase() === 'USDT' && (
+                          // if asset is USDT and display is not USD (and conversion failed for display currency), still show USD approx
+                           <span className="ml-1 text-xs">
+                             (approx. {formatConvertedDisplayPrice(seller.desiredPricePerAssetUSD!, 'USD', locale)})
+                           </span>
+                       )}
+
+                    </div>
+                  )}
+
+
                   <div className="flex items-center text-muted-foreground">
                      <ShoppingCart className="mr-2 h-4 w-4 text-orange-500" />
                      Sell Range (USD): ${seller.minSellUSD.toLocaleString(locale, {minimumFractionDigits:0, maximumFractionDigits:0})} - ${seller.maxSellUSD.toLocaleString(locale, {minimumFractionDigits:0, maximumFractionDigits:0})}
                   </div>
-                  {minSellInDisplayCurrencyFormatted && maxSellInDisplayCurrencyFormatted && (
+                  {minSellInDisplayCurrencyFormatted && maxSellInDisplayCurrencyFormatted && displayCurrencyId.toLowerCase() !== 'usd' && (
                     <div className="flex items-center text-muted-foreground">
                       <ShoppingCart className="mr-2 h-4 w-4 text-purple-500" />
                       Sell Range ({displayCurrencyName}): {minSellInDisplayCurrencyFormatted} - {maxSellInDisplayCurrencyFormatted}

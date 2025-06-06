@@ -111,6 +111,7 @@ export const MOCK_CONVERSION_RATES: Record<string, number> = {
   USDT: 1, // Assuming 1 USDT = 1 USD for simplicity
   EUR: 1.08, // Example: 1 EUR = 1.08 USD
   GBP: 1.25, // Example: 1 GBP = 1.25 USD
+  // Add other fiat currencies if needed
 };
 
 export const getAssetPriceInUSD = (assetSymbolOrId: string, assets: Asset[] = mockAssets): number => {
@@ -120,7 +121,13 @@ export const getAssetPriceInUSD = (assetSymbolOrId: string, assets: Asset[] = mo
     // Check if it's a direct fiat currency symbol we have a rate for
     const upperSymbol = assetSymbolOrId.toUpperCase();
     if (MOCK_CONVERSION_RATES[upperSymbol]) {
-      return MOCK_CONVERSION_RATES[upperSymbol]; // This is actually the rate TO USD, not the price of the currency itself.
+      // This is intended to get the price of an ASSET in USD.
+      // If a fiat currency symbol is passed, it implies we want the value of 1 unit of that currency in USD.
+      // E.g., if 'EUR' is passed, we want its USD equivalent based on the rate.
+      // However, the original MOCK_CONVERSION_RATES['EUR'] = 1.08 means 1 EUR = 1.08 USD.
+      // If the function is asked for the "price of EUR in USD", it should return 1.08.
+      // If it's asked for the "price of USD in USD", it should return 1.
+      return MOCK_CONVERSION_RATES[upperSymbol];
     }
     console.warn(`Asset or symbol ${assetSymbolOrId} not found for USD price conversion.`);
     return 0;
@@ -324,9 +331,11 @@ export const generateMockAddress = (assetSymbol: string, networkId: string): str
 };
 
 export const mockSellers: MockSeller[] = [
-  { id: 'seller1', name: 'CryptoKing', reputation: 99, avgTradeTime: '3 mins', minSellUSD: 50, maxSellUSD: 10000 },
-  { id: 'seller2', name: 'ETHWhale', reputation: 97, avgTradeTime: '5 mins', minSellUSD: 100, maxSellUSD: 50000 },
-  { id: 'seller3', name: 'SolTraderPro', reputation: 95, avgTradeTime: '8 mins', minSellUSD: 20, maxSellUSD: 2000 },
-  { id: 'seller4', name: 'QuickCoins', reputation: 92, avgTradeTime: '2 mins', minSellUSD: 10, maxSellUSD: 500 },
-  { id: 'seller5', name: 'TrustedTradex', reputation: 98, avgTradeTime: '10 mins', minSellUSD: 200, maxSellUSD: 25000 },
+  { id: 'seller1', name: 'CryptoKing', reputation: 99, avgTradeTime: '3 mins', minSellUSD: 50, maxSellUSD: 10000, desiredPricePerAssetUSD: 60500 }, // For Bitcoin
+  { id: 'seller2', name: 'ETHWhale', reputation: 97, avgTradeTime: '5 mins', minSellUSD: 100, maxSellUSD: 50000, desiredPricePerAssetUSD: 3020 },    // For Ethereum
+  { id: 'seller3', name: 'SolTraderPro', reputation: 95, avgTradeTime: '8 mins', minSellUSD: 20, maxSellUSD: 2000, desiredPricePerAssetUSD: 152 },      // For Solana
+  { id: 'seller4', name: 'QuickCoins', reputation: 92, avgTradeTime: '2 mins', minSellUSD: 10, maxSellUSD: 500, desiredPricePerAssetUSD: 1.01 },       // For USDC
+  { id: 'seller5', name: 'TrustedTradex', reputation: 98, avgTradeTime: '10 mins', minSellUSD: 200, maxSellUSD: 25000, desiredPricePerAssetUSD: 585 },   // For BNB
+  { id: 'seller6', name: 'EuroBitcoinMax', reputation: 96, avgTradeTime: '7 mins', minSellUSD: 100, maxSellUSD: 15000, desiredPricePerAssetUSD: 52500 * 1.08 }, // For Bitcoin (EU Seller), price in EUR converted to USD
 ];
+

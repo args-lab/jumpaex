@@ -73,4 +73,6 @@ export interface MockSeller {
   avgTradeTime?: string; // e.g., "5 mins"
   minSellUSD: number; // Minimum sell amount in USD
   maxSellUSD: number; // Maximum sell amount in USD
+  desiredPricePerAssetUSD?: number; // Seller's asking price for one unit of the asset, in USD
 }
+
