@@ -1,3 +1,4 @@
+
 'use client';
 
 import type * as React from 'react';
@@ -15,32 +16,30 @@ interface RegionSelectorProps {
   regions: Region[];
   selectedRegion: string;
   onRegionChange: (regionId: string) => void;
-  className?: string;
+  id?: string; 
 }
 
 export function RegionSelector({
   regions,
   selectedRegion,
   onRegionChange,
-  className,
+  id, 
 }: RegionSelectorProps) {
   return (
-    <div className={className}>
-      <Select value={selectedRegion} onValueChange={onRegionChange}>
-        <SelectTrigger className="w-full md:w-[180px]">
-          <div className="flex items-center">
-            <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-            <SelectValue placeholder="Select Region" />
-          </div>
-        </SelectTrigger>
-        <SelectContent>
-          {regions.map((region) => (
-            <SelectItem key={region.id} value={region.id}>
-              {region.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={selectedRegion} onValueChange={onRegionChange}>
+      <SelectTrigger id={id} className="w-full"> 
+        <div className="flex items-center">
+          <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+          <SelectValue placeholder="Select Region" />
+        </div>
+      </SelectTrigger>
+      <SelectContent>
+        {regions.map((region) => (
+          <SelectItem key={region.id} value={region.id}>
+            {region.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

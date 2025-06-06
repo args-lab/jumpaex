@@ -50,45 +50,61 @@ export default function HomePage() {
         <div className="mb-8 p-4 sm:p-6 bg-card rounded-lg shadow">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
             <h2 className="text-xl font-headline font-semibold mb-2 sm:mb-0">Filters</h2>
-            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="md:hidden">
+            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="lg:hidden"> {/* Changed from md:hidden to lg:hidden */}
               <SlidersHorizontal className="mr-2 h-4 w-4" />
               {showFilters ? 'Hide' : 'Show'} Filters
             </Button>
           </div>
           {showFilters && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"> {/* Adjusted grid classes */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Trade Type</Label>
-                <RadioGroup 
-                  onValueChange={setSelectedTradeType} 
-                  value={selectedTradeType} 
-                  className="flex space-x-2 pt-2" // Added pt-2 for alignment with other inputs
+                <Label htmlFor="trade-type-group" className="text-sm font-medium mb-2 block">Trade Type</Label>
+                <RadioGroup
+                  id="trade-type-group"
+                  onValueChange={setSelectedTradeType}
+                  value={selectedTradeType}
+                  className="flex space-x-2 pt-2" 
                 >
                   <div className="flex items-center space-x-1">
                     <RadioGroupItem value="buy" id="r_buy" />
-                    <Label htmlFor="r_buy" className="font-normal">Buy</Label>
+                    <Label htmlFor="r_buy" className="font-normal cursor-pointer">Buy</Label>
                   </div>
                   <div className="flex items-center space-x-1">
                     <RadioGroupItem value="sell" id="r_sell" />
-                    <Label htmlFor="r_sell" className="font-normal">Sell</Label>
+                    <Label htmlFor="r_sell" className="font-normal cursor-pointer">Sell</Label>
                   </div>
                 </RadioGroup>
               </div>
-              <RegionSelector
-                regions={mockRegions}
-                selectedRegion={selectedRegion}
-                onRegionChange={setSelectedRegion}
-              />
-              <CurrencySelector
-                currencies={mockCurrencies}
-                selectedCurrency={selectedCurrency}
-                onCurrencyChange={setSelectedCurrency}
-              />
-              <BlockchainFilter
-                networks={mockBlockchainNetworks}
-                selectedNetwork={selectedBlockchain}
-                onNetworkChange={setSelectedBlockchain}
-              />
+              
+              <div>
+                <Label htmlFor="region-selector" className="text-sm font-medium mb-2 block">Region</Label>
+                <RegionSelector
+                  id="region-selector"
+                  regions={mockRegions}
+                  selectedRegion={selectedRegion}
+                  onRegionChange={setSelectedRegion}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="currency-selector" className="text-sm font-medium mb-2 block">Currency</Label>
+                <CurrencySelector
+                  id="currency-selector"
+                  currencies={mockCurrencies}
+                  selectedCurrency={selectedCurrency}
+                  onCurrencyChange={setSelectedCurrency}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="blockchain-filter" className="text-sm font-medium mb-2 block">Blockchain</Label>
+                <BlockchainFilter
+                  id="blockchain-filter"
+                  networks={mockBlockchainNetworks}
+                  selectedNetwork={selectedBlockchain}
+                  onNetworkChange={setSelectedBlockchain}
+                />
+              </div>
             </div>
           )}
         </div>
