@@ -8,12 +8,12 @@ import Link from 'next/link';
 import { Header } from '@/components/app/header';
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { User, MessageSquare, ShieldCheck, Clock, ArrowLeft, AlertTriangle, ShoppingCart, Tag, Sparkles } from 'lucide-react';
 import type { Asset, MockSeller } from '@/types';
 import { mockAssets, mockSellers, getAssetPriceInUSD as getAssetBasePriceInUSD, MOCK_CONVERSION_RATES, mockCurrencies } from '@/data/mock';
-import { TradeProposalModal } from '@/components/app/trade-proposal-modal'; // New Modal
+import { TradeProposalModal } from '@/components/app/trade-proposal-modal'; 
 
 const getAssetSymbol = (assetName: string): string => {
   const parts = assetName.split(" ");
