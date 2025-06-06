@@ -118,10 +118,10 @@ export default function WalletPage() {
 
         <div className="mb-8 p-4 sm:p-6 bg-card rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4 font-headline">Actions</h2>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4">
             <Button
               size="lg"
-              className="w-full sm:w-auto flex-1 bg-accent hover:bg-accent/90 text-accent-foreground"
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
               onClick={() => setIsDepositModalOpen(true)}
             >
               <ArrowDownToLine className="mr-2 h-5 w-5" /> Deposit Funds
@@ -129,7 +129,7 @@ export default function WalletPage() {
             <Button
               variant="destructive"
               size="lg"
-              className="w-full sm:w-auto flex-1"
+              className="w-full"
               onClick={() => setIsWithdrawModalOpen(true)}
             >
               <ArrowUpFromLine className="mr-2 h-5 w-5" /> Withdraw Funds
