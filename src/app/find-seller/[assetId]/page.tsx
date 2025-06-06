@@ -51,13 +51,13 @@ const formatAssetPrice = (price: number, currency: string, locale: string | unde
   const minFractionDigits = symbol === 'BTC' || symbol === 'ETH' ? 4 : 2;
   
   if (currency.toUpperCase() === 'USDT') {
-    return `${price.toLocaleString(locale, { minimumFractionDigits, maximumFractionDigits: minFractionDigits })} USDT`;
+    return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: minFractionDigits })} USDT`;
   }
   try {
-    return price.toLocaleString(locale, { style: 'currency', currency: currency, minimumFractionDigits });
+    return price.toLocaleString(locale, { style: 'currency', currency: currency, minimumFractionDigits: minFractionDigits });
   } catch (e) {
     // Fallback for non-standard currency codes
-    return `${price.toLocaleString(locale, { minimumFractionDigits, maximumFractionDigits: minFractionDigits })} ${currency.toUpperCase()}`;
+    return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: minFractionDigits })} ${currency.toUpperCase()}`;
   }
 };
 
