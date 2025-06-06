@@ -7,7 +7,7 @@ import { RegionSelector } from '@/components/app/region-selector';
 import { CurrencySelector } from '@/components/app/currency-selector';
 import { BlockchainFilter } from '@/components/app/blockchain-filter';
 import { AssetList } from '@/components/app/asset-list';
-import { ChatModal } from '@/components/app/chat-modal';
+import { FindSellerModal } from '@/components/app/find-seller-modal'; // Changed from ChatModal
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 import type { Asset } from '@/types';
 import { mockAssets, mockRegions, mockCurrencies, mockBlockchainNetworks } from '@/data/mock';
@@ -20,20 +20,20 @@ export default function HomePage() {
   const [selectedCurrency, setSelectedCurrency] = useState<string>(mockCurrencies[0].id);
   const [selectedBlockchain, setSelectedBlockchain] = useState<string>(mockBlockchainNetworks[0].id);
   
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [selectedAssetForChat, setSelectedAssetForChat] = useState<Asset | null>(null);
+  const [isFindSellerModalOpen, setIsFindSellerModalOpen] = useState(false); // Renamed
+  const [selectedAssetForFindSeller, setSelectedAssetForFindSeller] = useState<Asset | null>(null); // Renamed
 
-  const [showFilters, setShowFilters] = useState(true); // Default to true for desktop
+  const [showFilters, setShowFilters] = useState(true);
 
-  const handleChatClick = (asset: Asset) => {
-    setSelectedAssetForChat(asset);
-    setIsChatModalOpen(true);
+  const handleFindSellerClick = (asset: Asset) => { // Renamed
+    setSelectedAssetForFindSeller(asset);
+    setIsFindSellerModalOpen(true);
   };
 
   const filteredAssets = useMemo(() => {
     return mockAssets.filter(asset => {
       const regionMatch = selectedRegion === 'global' || asset.region === selectedRegion;
-      const currencyMatch = asset.currency.toLowerCase() === selectedCurrency.toLowerCase() || (asset.currency === "USDT" && (selectedCurrency === "usd" || selectedCurrency === "usdt")); // Allow USDT to match USD selection for broader results
+      const currencyMatch = asset.currency.toLowerCase() === selectedCurrency.toLowerCase() || (asset.currency === "USDT" && (selectedCurrency === "usd" || selectedCurrency === "usdt"));
       const blockchainMatch = selectedBlockchain === 'all' || asset.network.toLowerCase() === selectedBlockchain.toLowerCase();
       return regionMatch && currencyMatch && blockchainMatch;
     });
@@ -42,7 +42,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow container mx-auto px-4 pt-8 pb-20"> {/* Added pb-20 for bottom nav bar */}
+      <main className="flex-grow container mx-auto px-4 pt-8 pb-20">
         <div className="mb-6">
           <h1 className="text-3xl font-headline font-bold mb-2">P2P Crypto Marketplace</h1>
           <p className="text-muted-foreground">Find the best crypto deals in your region.</p>
@@ -81,14 +81,14 @@ export default function HomePage() {
 
         <AssetList 
           assets={filteredAssets} 
-          onChatClick={handleChatClick} 
+          onFindSellerClick={handleFindSellerClick} // Updated prop
           blockchainNetworks={mockBlockchainNetworks} 
         />
       </main>
-      <ChatModal
-        isOpen={isChatModalOpen}
-        onOpenChange={setIsChatModalOpen}
-        asset={selectedAssetForChat}
+      <FindSellerModal // Changed from ChatModal
+        isOpen={isFindSellerModalOpen}
+        onOpenChange={setIsFindSellerModalOpen}
+        asset={selectedAssetForFindSeller}
       />
       <footer className="py-6 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AnonTrade. All rights reserved.

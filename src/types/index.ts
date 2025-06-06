@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 
 export interface Asset {
@@ -63,4 +64,11 @@ export interface DepositableAsset {
   symbol: string; // e.g., 'BTC', 'ETH', 'USDT'
   icon?: LucideIcon | string;
   supportedNetworks: string[]; // Array of network IDs (e.g., ['bitcoin'], ['ethereum', 'bsc'])
+}
+
+export interface MockSeller {
+  id: string;
+  name: string;
+  reputation?: number; // e.g., 98 (percentage)
+  avgTradeTime?: string; // e.g., "5 mins"
 }

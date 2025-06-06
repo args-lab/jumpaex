@@ -6,23 +6,20 @@ import type { Asset, BlockchainNetwork } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, MessageSquare, Network } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Network } from 'lucide-react'; // Changed MessageSquare to Users
 import Image from 'next/image';
 
 interface AssetCardProps {
   asset: Asset;
-  onChatClick: (asset: Asset) => void;
+  onFindSellerClick: (asset: Asset) => void; // Renamed prop
   blockchainNetworks: BlockchainNetwork[];
 }
 
-// Helper function to determine decimal places, kept outside for potential reuse or if it remains pure
 const getMinMaxDigits = (price: number, currency: string) => {
   const upperCurrency = currency.toUpperCase();
-  // Consistent decimal places: 2 for USDT/USD, otherwise dynamic (6 for <1, else 2)
   return (upperCurrency === 'USDT' || upperCurrency === 'USD') ? 2 : (price < 1 ? 6 : 2);
 };
 
-// Formatting function that will be called client-side
 const calculateFormattedPrice = (price: number, currency: string, locale: string | undefined) => {
   const upperCurrency = currency.toUpperCase();
   const minMaxDigits = getMinMaxDigits(price, currency);
@@ -41,7 +38,6 @@ const calculateFormattedPrice = (price: number, currency: string, locale: string
         maximumFractionDigits: minMaxDigits,
       });
     } catch (e) {
-      // Fallback for any other currency codes that might not be ISO-compliant
       return `${price.toLocaleString(locale, {
         minimumFractionDigits: minMaxDigits,
         maximumFractionDigits: minMaxDigits,
@@ -50,13 +46,11 @@ const calculateFormattedPrice = (price: number, currency: string, locale: string
   }
 };
 
-export function AssetCard({ asset, onChatClick, blockchainNetworks }: AssetCardProps) {
+export function AssetCard({ asset, onFindSellerClick, blockchainNetworks }: AssetCardProps) {
   const [displayedPrice, setDisplayedPrice] = useState<string | null>(null);
   const [displayedVolume, setDisplayedVolume] = useState<string | null>(null);
 
   useEffect(() => {
-    // This effect runs only on the client, after hydration
-    // 'undefined' locale for toLocaleString uses the browser's default locale
     setDisplayedPrice(calculateFormattedPrice(asset.price, asset.currency, undefined));
     setDisplayedVolume(asset.volume.toLocaleString(undefined));
   }, [asset.price, asset.currency, asset.volume]);
@@ -65,7 +59,6 @@ export function AssetCard({ asset, onChatClick, blockchainNetworks }: AssetCardP
   const AssetIcon = asset.icon && typeof asset.icon !== 'string' ? asset.icon : null;
   const NetworkIcon = networkInfo?.icon && typeof networkInfo.icon !== 'string' ? networkInfo.icon : Network;
 
-  // Fallback for SSR and initial client render before useEffect
   const ssrFormattedPrice = `${asset.price.toFixed(getMinMaxDigits(asset.price, asset.currency))} ${asset.currency.toUpperCase()}`;
   const ssrFormattedVolume = asset.volume.toString();
 
@@ -118,9 +111,9 @@ export function AssetCard({ asset, onChatClick, blockchainNetworks }: AssetCardP
         </div>
       </CardContent>
       <CardFooter className="p-4 bg-muted/20">
-        <Button onClick={() => onChatClick(asset)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Chat with Seller
+        <Button onClick={() => onFindSellerClick(asset)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Users className="mr-2 h-4 w-4" />
+          Find Seller
         </Button>
       </CardFooter>
     </Card>

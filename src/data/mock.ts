@@ -1,4 +1,5 @@
-import type { Asset, Region, Currency, BlockchainNetwork, Transaction, WalletTransaction, DepositableAsset } from '@/types';
+
+import type { Asset, Region, Currency, BlockchainNetwork, Transaction, WalletTransaction, DepositableAsset, MockSeller } from '@/types';
 import { Bitcoin, Landmark, Waves, CircleDollarSign, Replace, DollarSign } from 'lucide-react';
 
 export const mockRegions: Region[] = [
@@ -41,7 +42,7 @@ export const mockAssets: Asset[] = [
     icon: Bitcoin,
     volume: 1.5,
     change24h: 2.5,
-    seller: 'UserA',
+    seller: 'CryptoKing',
   },
   {
     id: '2',
@@ -53,7 +54,7 @@ export const mockAssets: Asset[] = [
     icon: Landmark,
     volume: 10,
     change24h: -1.2,
-    seller: 'UserB',
+    seller: 'ETHWhale',
   },
   {
     id: '3',
@@ -65,7 +66,7 @@ export const mockAssets: Asset[] = [
     icon: Waves,
     volume: 100,
     change24h: 5.1,
-    seller: 'UserC',
+    seller: 'SolTraderPro',
   },
   {
     id: '4',
@@ -77,7 +78,7 @@ export const mockAssets: Asset[] = [
     icon: CircleDollarSign,
     volume: 50000,
     change24h: 0.01,
-    seller: 'UserD',
+    seller: 'StableCoinGuru',
   },
   {
     id: '5',
@@ -89,7 +90,7 @@ export const mockAssets: Asset[] = [
     icon: Replace,
     volume: 50,
     change24h: 1.8,
-    seller: 'UserE',
+    seller: 'BNBFan',
   },
   {
     id: '6',
@@ -101,7 +102,7 @@ export const mockAssets: Asset[] = [
     icon: Bitcoin,
     volume: 0.5,
     change24h: 2.1,
-    seller: 'UserF',
+    seller: 'EuroBitcoinMax',
   },
 ];
 
@@ -284,3 +285,11 @@ export const generateMockAddress = (assetSymbol: string, networkId: string): str
   if (assetSymbol === 'BNB' && networkId === 'bsc') return '0xb8c77482e45F1F44dE1745F52C74426C631bDD52';
   return 'MockAddressNotConfiguredForThisSelection';
 };
+
+export const mockSellers: MockSeller[] = [
+  { id: 'seller1', name: 'CryptoKing', reputation: 99, avgTradeTime: '3 mins' },
+  { id: 'seller2', name: 'ETHWhale', reputation: 97, avgTradeTime: '5 mins' },
+  { id: 'seller3', name: 'SolTraderPro', reputation: 95, avgTradeTime: '8 mins' },
+  { id: 'seller4', name: 'QuickCoins', reputation: 92, avgTradeTime: '2 mins' },
+  { id: 'seller5', name: 'TrustedTradex', reputation: 98, avgTradeTime: '10 mins' },
+];
