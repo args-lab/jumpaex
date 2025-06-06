@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 96.1%; /* #F5F5F5 Light Gray */
+    --background: 270 17% 98%; /* Very Light Off-White/Lavender Tint */
     --foreground: 0 0% 3.9%; /* Dark Gray for text */
 
     --card: 0 0% 100%; /* White */
@@ -13,87 +13,86 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
 
-    --primary: 197 71% 53%; /* #29ABE2 Vibrant Blue */
+    --primary: 260 60% 50%; /* PancakeSwap Purple */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 0 0% 90%; /* Lighter gray for secondary elements */
+    --secondary: 270 10% 94%; /* Light Gray, slightly warm */
     --secondary-foreground: 0 0% 9%;
 
-    --muted: 0 0% 85%; /* Muted gray */
+    --muted: 270 10% 90%; /* Muted Gray, slightly warm */
     --muted-foreground: 0 0% 45.1%;
 
-    --accent: 47 100% 70%; /* #FFDA63 Yellow */
-    --accent-foreground: 0 0% 3.9%; /* Dark text on yellow */
+    --accent: 184 80% 42%; /* PancakeSwap Teal */
+    --accent-foreground: 0 0% 3.9%; /* Dark text on Teal */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 197 71% 53%; /* Vibrant Blue for rings */
+    --border: 270 10% 88%; /* Subtle Border */
+    --input: 270 10% 88%;
+    --ring: 260 60% 50%; /* PancakeSwap Purple for rings */
 
-    --chart-1: 197 71% 53%;
-    --chart-2: 47 100% 70%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 260 60% 50%; /* Primary - Purple */
+    --chart-2: 184 80% 42%; /* Accent - Teal */
+    --chart-3: 260 50% 35%; /* Darker Purple */
+    --chart-4: 39 100% 61%; /* Yellow/Orange Accent */
+    --chart-5: 184 70% 55%; /* Lighter Teal */
 
     --radius: 0.5rem;
 
-    /* Sidebar specific variables, can mirror main theme or be distinct */
-    --sidebar-background: 0 0% 98%; /* Slightly off-white or same as main background */
+    --sidebar-background: 270 15% 95%;
     --sidebar-foreground: 0 0% 3.9%;
-    --sidebar-primary: 197 71% 53%;
+    --sidebar-primary: 260 60% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 47 100% 70%;
+    --sidebar-accent: 184 80% 42%;
     --sidebar-accent-foreground: 0 0% 3.9%;
-    --sidebar-border: 0 0% 89.8%;
-    --sidebar-ring: 197 71% 53%;
+    --sidebar-border: 270 10% 85%;
+    --sidebar-ring: 260 60% 50%;
   }
 
   .dark {
-    --background: 240 10% 3.9%; /* Dark Background */
+    --background: 250 5% 16%; /* PancakeSwap Dark Background */
     --foreground: 0 0% 98%; /* Light Text */
 
-    --card: 240 10% 3.9%;
+    --card: 250 5% 12%; /* Slightly darker than background for cards */
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 3.9%;
+    --popover: 250 5% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 197 71% 53%; /* #29ABE2 Vibrant Blue */
+    --primary: 260 60% 50%; /* PancakeSwap Purple */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 250 5% 22%; /* Slightly lighter dark */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
+    --muted: 250 5% 22%;
     --muted-foreground: 0 0% 63.9%;
 
-    --accent: 47 100% 70%; /* #FFDA63 Yellow */
-    --accent-foreground: 0 0% 3.9%; /* Dark text on yellow */
+    --accent: 184 80% 42%; /* PancakeSwap Teal */
+    --accent-foreground: 0 0% 98%; /* Light text on Teal for dark mode */
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 70% 50%; /* Adjusted Red for dark mode */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 197 71% 53%; /* Vibrant Blue for rings */
+    --border: 250 5% 25%;
+    --input: 250 5% 25%;
+    --ring: 260 60% 50%; /* PancakeSwap Purple for rings */
 
-    --chart-1: 197 71% 53%;
-    --chart-2: 47 100% 70%;
-    --chart-3: 197 80% 70%;
-    --chart-4: 47 90% 80%;
-    --chart-5: 200 85% 65%;
+    --chart-1: 260 60% 50%; /* Primary - Purple */
+    --chart-2: 184 80% 42%; /* Accent - Teal */
+    --chart-3: 260 70% 65%; /* Lighter Purple for Dark Mode */
+    --chart-4: 39 100% 61%; /* Yellow/Orange Accent */
+    --chart-5: 184 90% 55%; /* Brighter Teal for Dark Mode */
     
-    --sidebar-background: 240 5.9% 10%;
+    --sidebar-background: 250 5% 13%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 197 71% 53%;
+    --sidebar-primary: 260 60% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 47 100% 70%;
-    --sidebar-accent-foreground: 0 0% 3.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 197 71% 53%;
+    --sidebar-accent: 184 80% 42%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 250 5% 20%;
+    --sidebar-ring: 260 60% 50%;
   }
 }
 
