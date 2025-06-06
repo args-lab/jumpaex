@@ -22,7 +22,7 @@ import { ArrowDownToLine, ArrowUpFromLine, CheckCircle, Clock, XCircle, AlertCir
 import Image from 'next/image';
 import { format as formatDateFns } from 'date-fns';
 import { DepositModal } from '@/components/app/deposit-modal';
-import { WithdrawModal } from '@/components/app/withdraw-modal'; // Import WithdrawModal
+import { WithdrawModal } from '@/components/app/withdraw-modal';
 
 // Helper to determine decimal places for wallet transactions
 const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
@@ -51,7 +51,7 @@ interface FormattedWalletTransaction extends WalletTransactionType {
 export default function WalletPage() {
   const [formattedWalletTransactions, setFormattedWalletTransactions] = useState<FormattedWalletTransaction[]>([]);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false); // State for WithdrawModal
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   useEffect(() => {
     const locale = typeof window !== 'undefined' ? navigator.language : undefined;
@@ -121,7 +121,7 @@ export default function WalletPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
               size="lg"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="w-full sm:w-auto flex-1 bg-accent hover:bg-accent/90 text-accent-foreground"
               onClick={() => setIsDepositModalOpen(true)}
             >
               <ArrowDownToLine className="mr-2 h-5 w-5" /> Deposit Funds
@@ -129,8 +129,8 @@ export default function WalletPage() {
             <Button
               variant="destructive"
               size="lg"
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => setIsWithdrawModalOpen(true)} // Open WithdrawModal
+              className="w-full sm:w-auto flex-1"
+              onClick={() => setIsWithdrawModalOpen(true)}
             >
               <ArrowUpFromLine className="mr-2 h-5 w-5" /> Withdraw Funds
             </Button>
@@ -203,7 +203,7 @@ export default function WalletPage() {
       </main>
       <BottomNavigationBar />
       <DepositModal isOpen={isDepositModalOpen} onOpenChange={setIsDepositModalOpen} />
-      <WithdrawModal isOpen={isWithdrawModalOpen} onOpenChange={setIsWithdrawModalOpen} /> {/* Add WithdrawModal */}
+      <WithdrawModal isOpen={isWithdrawModalOpen} onOpenChange={setIsWithdrawModalOpen} />
     </div>
   );
 }
