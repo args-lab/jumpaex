@@ -10,9 +10,10 @@ import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { User, MessageSquare, ShieldCheck, Clock, ArrowLeft, AlertTriangle, ShoppingCart, Tag } from 'lucide-react';
+import { User, MessageSquare, ShieldCheck, Clock, ArrowLeft, AlertTriangle, ShoppingCart, Tag, Sparkles } from 'lucide-react';
 import type { Asset, MockSeller } from '@/types';
-import { mockAssets, mockSellers, getAssetPriceInUSD as getAssetBasePriceInUSD, MOCK_CONVERSION_RATES, mockCurrencies } from '@/data/mock'; // Renamed to avoid conflict
+import { mockAssets, mockSellers, getAssetPriceInUSD as getAssetBasePriceInUSD, MOCK_CONVERSION_RATES, mockCurrencies } from '@/data/mock';
+import { TradeProposalModal } from '@/components/app/trade-proposal-modal'; // New Modal
 
 const getAssetSymbol = (assetName: string): string => {
   const parts = assetName.split(" ");
@@ -43,23 +44,19 @@ const formatCryptoAmount = (amount: number, locale: string | undefined, assetSym
   return `${formattedAmount} ${assetSymbol || ''}`.trim();
 };
 
-// Formats the asset's original price in its native currency
 const formatAssetNativePrice = (price: number, currency: string, locale: string | undefined, assetNameOrSymbol: string) => {
-  const symbol = getAssetSymbol(assetNameOrSymbol); // e.g. "Bitcoin" -> "BTC"
+  const symbol = getAssetSymbol(assetNameOrSymbol);
   
   let minFractionDigitsDefault = 2;
   let maxFractionDigitsDefault = 2;
 
-  // More precision for crypto, standard for fiat/stablecoins
   if (['BTC', 'ETH'].includes(symbol.toUpperCase())) {
     minFractionDigitsDefault = 4;
     maxFractionDigitsDefault = 8;
   } else if (!mockCurrencies.find(c => c.symbol.toUpperCase() === currency.toUpperCase() || c.id.toUpperCase() === currency.toUpperCase())) {
-    // For other cryptos not in primary list, use more precision
     minFractionDigitsDefault = 2;
     maxFractionDigitsDefault = 6;
   }
-
 
   if (currency.toUpperCase() === 'USDT') {
     return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigitsDefault, maximumFractionDigits: maxFractionDigitsDefault })} USDT`;
@@ -67,12 +64,10 @@ const formatAssetNativePrice = (price: number, currency: string, locale: string 
   try {
     return price.toLocaleString(locale, { style: 'currency', currency: currency, minimumFractionDigits: minFractionDigitsDefault, maximumFractionDigits: maxFractionDigitsDefault });
   } catch (e) {
-    // Fallback for unrecognized currency codes
     return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigitsDefault, maximumFractionDigits: maxFractionDigitsDefault })} ${currency.toUpperCase()}`;
   }
 };
 
-// Formats a converted price into a target display currency
 const formatConvertedDisplayPrice = (value: number, currencyCode: string, locale: string | undefined) => {
     const targetCurrencyInfo = mockCurrencies.find(c => c.id.toUpperCase() === currencyCode.toUpperCase());
     const displaySymbol = targetCurrencyInfo?.symbol || currencyCode.toUpperCase();
@@ -80,15 +75,13 @@ const formatConvertedDisplayPrice = (value: number, currencyCode: string, locale
     let minFractionDigits = 2;
     let maxFractionDigits = 2;
 
-    if (targetCurrencyInfo && targetCurrencyInfo.id.toUpperCase() !== 'USDT') { // USDT is not a standard 'currency' style
+    if (targetCurrencyInfo && targetCurrencyInfo.id.toUpperCase() !== 'USDT') {
          try {
             return value.toLocaleString(locale, { style: 'currency', currency: targetCurrencyInfo.id, minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits });
         } catch (e) {
-            // Fallback if currency style fails
             return `${value.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits })} ${displaySymbol}`;
         }
     }
-    // For USDT or if style:'currency' fails or not applicable
     return `${value.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits })} ${displaySymbol}`;
 };
 
@@ -98,10 +91,12 @@ export default function FindSellerPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const assetId = typeof params.assetId === 'string' ? params.assetId : '';
-  const displayCurrencyId = searchParams.get('displayCurrency') || 'usd'; // Default to 'usd'
+  const displayCurrencyId = searchParams.get('displayCurrency') || 'usd'; 
 
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined); 
   const [locale, setLocale] = useState<string | undefined>(undefined);
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+  const [selectedSellerForModal, setSelectedSellerForModal] = useState<MockSeller | null>(null);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -121,8 +116,12 @@ export default function FindSellerPage() {
     return getAssetBasePriceInUSD(asset.id, mockAssets); 
   }, [asset]);
 
+  const handleInitiateTrade = (seller: MockSeller) => {
+    setSelectedSellerForModal(seller);
+    setIsTradeModalOpen(true);
+  };
 
-  if (asset === undefined) { // Still loading asset data
+  if (asset === undefined) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -134,7 +133,7 @@ export default function FindSellerPage() {
     );
   }
 
-  if (asset === null) { // Asset not found after attempting to load
+  if (asset === null) { 
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -183,11 +182,11 @@ export default function FindSellerPage() {
             const minSellInAsset = assetPriceInUSD > 0 ? seller.minSellUSD / assetPriceInUSD : 0;
             const maxSellInAsset = assetPriceInUSD > 0 ? seller.maxSellUSD / assetPriceInUSD : 0;
             
-            const targetRateToUSD = MOCK_CONVERSION_RATES[displayCurrencyId.toUpperCase()];
+            const targetRateToUSD = MOCK_CONVERSION_RATES[displayCurrencyId.toUpperCase()] || (displayCurrencyId.toUpperCase() === 'USD' ? 1 : 0);
             let minSellInDisplayCurrencyFormatted: string | null = null;
             let maxSellInDisplayCurrencyFormatted: string | null = null;
 
-            if (targetRateToUSD && displayCurrencyId.toLowerCase() !== 'usd') {
+            if (targetRateToUSD > 0 && displayCurrencyId.toLowerCase() !== 'usd') {
                 const minSellInDisplayCurrency = seller.minSellUSD / targetRateToUSD;
                 const maxSellInDisplayCurrency = seller.maxSellUSD / targetRateToUSD;
                 minSellInDisplayCurrencyFormatted = formatConvertedDisplayPrice(minSellInDisplayCurrency, displayCurrencyId, locale);
@@ -200,28 +199,21 @@ export default function FindSellerPage() {
             let desiredPriceInSelectedDisplayCurrencyFormatted: string | null = null;
 
             if (seller.desiredPricePerAssetUSD !== undefined) {
-              // Convert seller's USD desired price to the asset's original currency (e.g., USDT, EUR)
-              const assetOriginalCurrencyRateToUSD = MOCK_CONVERSION_RATES[asset.currency.toUpperCase()] || (asset.currency.toUpperCase() === 'USD' ? 1 : 0);
+              const assetOriginalCurrencyRateToUSD = MOCK_CONVERSION_RATES[asset.currency.toUpperCase()] || (asset.currency.toUpperCase() === 'USD' ? 1 : (asset.currency.toUpperCase() === 'USDT' ? 1 : 0));
               if (assetOriginalCurrencyRateToUSD > 0) {
                 const desiredPriceInAssetOriginalCurrency = seller.desiredPricePerAssetUSD / assetOriginalCurrencyRateToUSD;
-                desiredPriceInAssetCurrencyFormatted = formatAssetNativePrice(desiredPriceInAssetOriginalCurrency, asset.currency, locale, assetSymbolDisplay);
-              } else if (asset.currency.toUpperCase() === 'USDT' && MOCK_CONVERSION_RATES['USDT'] === 1) { // Handle USDT case directly
-                desiredPriceInAssetCurrencyFormatted = formatAssetNativePrice(seller.desiredPricePerAssetUSD, 'USDT', locale, assetSymbolDisplay);
+                 desiredPriceInAssetCurrencyFormatted = formatAssetNativePrice(desiredPriceInAssetOriginalCurrency, asset.currency, locale, assetSymbolDisplay);
               }
 
-
-              // Convert seller's USD desired price to the user's selected display currency
-              if (targetRateToUSD) {
+              if (targetRateToUSD > 0) {
                 const desiredPriceInSelectedDisplay = seller.desiredPricePerAssetUSD / targetRateToUSD;
                 desiredPriceInSelectedDisplayCurrencyFormatted = formatConvertedDisplayPrice(desiredPriceInSelectedDisplay, displayCurrencyId, locale);
-              } else if (displayCurrencyId.toUpperCase() === 'USD') { // If display currency is USD
-                 desiredPriceInSelectedDisplayCurrencyFormatted = formatConvertedDisplayPrice(seller.desiredPricePerAssetUSD, 'USD', locale);
               }
             }
 
 
             return (
-              <Card key={seller.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+              <Card key={seller.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col">
                 <CardHeader className="p-4 pb-2 bg-card">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -233,7 +225,7 @@ export default function FindSellerPage() {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-2 space-y-3 text-sm">
+                <CardContent className="p-4 pt-2 space-y-3 text-sm flex-grow">
                   {seller.reputation !== undefined && (
                     <div className="flex items-center text-muted-foreground">
                       <ShieldCheck className="mr-2 h-4 w-4 text-green-500" />
@@ -247,7 +239,6 @@ export default function FindSellerPage() {
                     </div>
                   )}
                   
-                  {/* Seller's Desired Price */}
                   {desiredPriceInAssetCurrencyFormatted && (
                     <div className="flex items-center text-muted-foreground">
                       <Tag className="mr-2 h-4 w-4 text-teal-500" />
@@ -257,15 +248,8 @@ export default function FindSellerPage() {
                           ({desiredPriceInSelectedDisplayCurrencyFormatted})
                         </span>
                       )}
-                       {!desiredPriceInSelectedDisplayCurrencyFormatted && displayCurrencyId.toUpperCase() !== 'USD' && asset.currency.toUpperCase() === 'USDT' && seller.desiredPricePerAssetUSD !== undefined && (
-                           <span className="ml-1 text-xs">
-                             ({formatConvertedDisplayPrice(seller.desiredPricePerAssetUSD, 'USD', locale)})
-                           </span>
-                       )}
-
                     </div>
                   )}
-
 
                   <div className="flex items-center text-muted-foreground">
                      <ShoppingCart className="mr-2 h-4 w-4 text-orange-500" />
@@ -283,17 +267,17 @@ export default function FindSellerPage() {
                         Sell Range ({assetSymbolDisplay}): {formatCryptoAmount(minSellInAsset, locale)} - {formatCryptoAmount(maxSellInAsset, locale, assetSymbolDisplay)}
                      </div>
                   )}
-                  <Button 
-                    asChild
-                    size="sm" 
-                    className="w-full mt-3"
-                  >
-                    <Link href={`/chat/${asset.id}/${seller.id}`}>
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      Chat with {seller.name}
-                    </Link>
-                  </Button>
                 </CardContent>
+                <CardFooter className="p-4 pt-3">
+                  <Button 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => handleInitiateTrade(seller)}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Initiate Trade
+                  </Button>
+                </CardFooter>
               </Card>
             );
           })}
@@ -303,7 +287,17 @@ export default function FindSellerPage() {
         )}
       </main>
       <BottomNavigationBar />
+      {selectedSellerForModal && asset && (
+        <TradeProposalModal
+            isOpen={isTradeModalOpen}
+            onOpenChange={setIsTradeModalOpen}
+            asset={asset}
+            seller={selectedSellerForModal}
+            assetSymbol={assetSymbolDisplay}
+            displayCurrencyId={displayCurrencyId}
+            locale={locale}
+        />
+      )}
     </div>
   );
 }
-
