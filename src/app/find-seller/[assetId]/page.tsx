@@ -140,7 +140,7 @@ export default function FindSellerPage() {
         <Header />
         <main className="flex-grow container mx-auto px-4 pt-8 pb-20">
            <div className="mb-6">
-            <Button variant="outline" asChild className="mb-4" onClick={() => router.back()}>
+            <Button variant="outline" className="mb-4" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
             <Alert variant="destructive">
@@ -164,7 +164,7 @@ export default function FindSellerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 pt-8 pb-24">
         <div className="mb-6">
-          <Button variant="outline" asChild className="mb-4" onClick={() => router.back()}>
+          <Button variant="outline" className="mb-4" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <div className="flex items-center space-x-3 mb-2">
@@ -191,7 +191,6 @@ export default function FindSellerPage() {
             }
             const displayCurrencyInfo = mockCurrencies.find(c => c.id.toLowerCase() === displayCurrencyId.toLowerCase());
             const displayCurrencyName = displayCurrencyInfo?.name || displayCurrencyId.toUpperCase();
-            // const displayCurrencySymbol = displayCurrencyInfo?.symbol || displayCurrencyId.toUpperCase(); // Not used
             
             let desiredPriceInAssetCurrencyFormatted: string | null = null;
             let desiredPriceInSelectedDisplayCurrencyFormatted: string | null = null;
@@ -303,3 +302,4 @@ export default function FindSellerPage() {
     </div>
   );
 }
+
