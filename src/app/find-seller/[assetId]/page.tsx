@@ -140,8 +140,10 @@ export default function FindSellerPage() {
         <Header />
         <main className="flex-grow container mx-auto px-4 pt-8 pb-20">
            <div className="mb-6">
-            <Button variant="outline" className="mb-4" onClick={() => router.back()}>
+            <Button variant="outline" className="mb-4" asChild>
+              <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Link>
             </Button>
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -164,8 +166,10 @@ export default function FindSellerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 pt-8 pb-24">
         <div className="mb-6">
-          <Button variant="outline" className="mb-4" onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          <Button variant="outline" className="mb-4" asChild>
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Link>
           </Button>
           <div className="flex items-center space-x-3 mb-2">
             {asset.icon && typeof asset.icon !== 'string' && <asset.icon className="h-10 w-10 text-primary" />}
