@@ -22,6 +22,7 @@ import { ArrowDownToLine, ArrowUpFromLine, CheckCircle, Clock, XCircle, AlertCir
 import Image from 'next/image';
 import { format as formatDateFns } from 'date-fns';
 import { DepositModal } from '@/components/app/deposit-modal';
+import { WithdrawModal } from '@/components/app/withdraw-modal'; // Import WithdrawModal
 
 // Helper to determine decimal places for wallet transactions
 const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
@@ -50,9 +51,10 @@ interface FormattedWalletTransaction extends WalletTransactionType {
 export default function WalletPage() {
   const [formattedWalletTransactions, setFormattedWalletTransactions] = useState<FormattedWalletTransaction[]>([]);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false); // State for WithdrawModal
 
   useEffect(() => {
-    const locale = undefined; // browser default
+    const locale = typeof window !== 'undefined' ? navigator.language : undefined;
     setFormattedWalletTransactions(
       mockWalletTransactions.map(tx => ({
         ...tx,
@@ -124,7 +126,12 @@ export default function WalletPage() {
             >
               <ArrowDownToLine className="mr-2 h-5 w-5" /> Deposit Funds
             </Button>
-            <Button variant="destructive" size="lg" className="flex-1 bg-red-600 hover:bg-red-700 text-white">
+            <Button 
+              variant="destructive" 
+              size="lg" 
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => setIsWithdrawModalOpen(true)} // Open WithdrawModal
+            >
               <ArrowUpFromLine className="mr-2 h-5 w-5" /> Withdraw Funds
             </Button>
           </div>
@@ -196,6 +203,7 @@ export default function WalletPage() {
       </main>
       <BottomNavigationBar />
       <DepositModal isOpen={isDepositModalOpen} onOpenChange={setIsDepositModalOpen} />
+      <WithdrawModal isOpen={isWithdrawModalOpen} onOpenChange={setIsWithdrawModalOpen} /> {/* Add WithdrawModal */}
     </div>
   );
 }
