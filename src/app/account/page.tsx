@@ -95,7 +95,7 @@ export default function AccountPage() {
                   <UserCircle className="h-10 w-10 text-muted-foreground" />
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="min-w-0">
                 <CardTitle className="font-headline text-xl">{mockUser.username}</CardTitle>
                 <CardDescription className="break-words">{mockUser.email}</CardDescription>
               </div>
