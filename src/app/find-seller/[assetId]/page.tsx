@@ -200,6 +200,18 @@ export default function FindSellerPage() {
             const minSellInAsset = assetPriceInUSD > 0 ? seller.minSellUSD / assetPriceInUSD : 0;
             const maxSellInAsset = assetPriceInUSD > 0 ? seller.maxSellUSD / assetPriceInUSD : 0;
             
+            const targetRateToUSD = MOCK_CONVERSION_RATES[displayCurrencyId.toUpperCase()];
+            let minSellInDisplayCurrencyFormatted: string | null = null;
+            let maxSellInDisplayCurrencyFormatted: string | null = null;
+
+            if (targetRateToUSD && displayCurrencyId.toLowerCase() !== 'usd') {
+                const minSellInDisplayCurrency = seller.minSellUSD / targetRateToUSD;
+                const maxSellInDisplayCurrency = seller.maxSellUSD / targetRateToUSD;
+                minSellInDisplayCurrencyFormatted = formatConvertedDisplayPrice(minSellInDisplayCurrency, displayCurrencyId, locale);
+                maxSellInDisplayCurrencyFormatted = formatConvertedDisplayPrice(maxSellInDisplayCurrency, displayCurrencyId, locale);
+            }
+            const displayCurrencyName = mockCurrencies.find(c => c.id.toLowerCase() === displayCurrencyId.toLowerCase())?.name || displayCurrencyId.toUpperCase();
+
             return (
               <Card key={seller.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader className="p-4 pb-2 bg-card">
@@ -228,9 +240,15 @@ export default function FindSellerPage() {
                   )}
                   <div className="flex items-center text-muted-foreground">
                      <ShoppingCart className="mr-2 h-4 w-4 text-orange-500" />
-                     Sell Range (USD): ${seller.minSellUSD.toLocaleString(locale, {minimumFractionDigits:0})} - ${seller.maxSellUSD.toLocaleString(locale, {minimumFractionDigits:0})}
+                     Sell Range (USD): ${seller.minSellUSD.toLocaleString(locale, {minimumFractionDigits:0, maximumFractionDigits:0})} - ${seller.maxSellUSD.toLocaleString(locale, {minimumFractionDigits:0, maximumFractionDigits:0})}
                   </div>
-                  {assetPriceInUSD > 0 && ( // Only show asset range if price is available
+                  {minSellInDisplayCurrencyFormatted && maxSellInDisplayCurrencyFormatted && (
+                    <div className="flex items-center text-muted-foreground">
+                      <ShoppingCart className="mr-2 h-4 w-4 text-purple-500" />
+                      Sell Range ({displayCurrencyName}): {minSellInDisplayCurrencyFormatted} - {maxSellInDisplayCurrencyFormatted}
+                    </div>
+                  )}
+                  {assetPriceInUSD > 0 && ( 
                      <div className="flex items-center text-muted-foreground">
                         <ShoppingCart className="mr-2 h-4 w-4 text-indigo-500" />
                         Sell Range ({assetSymbolDisplay}): {formatCryptoAmount(minSellInAsset, locale)} - {formatCryptoAmount(maxSellInAsset, locale, assetSymbolDisplay)}
@@ -259,3 +277,4 @@ export default function FindSellerPage() {
     </div>
   );
 }
+
