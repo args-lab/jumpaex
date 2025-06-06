@@ -12,23 +12,31 @@ import type { Asset } from '@/types';
 import { mockAssets, mockRegions, mockCurrencies, mockBlockchainNetworks } from '@/data/mock';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { SlidersHorizontal } from 'lucide-react';
 
 export default function HomePage() {
   const [selectedRegion, setSelectedRegion] = useState<string>(mockRegions[0].id);
   const [selectedCurrency, setSelectedCurrency] = useState<string>(mockCurrencies[0].id);
   const [selectedBlockchain, setSelectedBlockchain] = useState<string>(mockBlockchainNetworks[0].id);
+  const [selectedTradeType, setSelectedTradeType] = useState<string>('buy');
   
   const [showFilters, setShowFilters] = useState(true);
 
   const filteredAssets = useMemo(() => {
+    if (selectedTradeType === 'sell') {
+      // If user selects 'Sell', we assume they are looking to create a sell listing,
+      // not browse existing ones. Current mockAssets are for buying.
+      return [];
+    }
     return mockAssets.filter(asset => {
       const regionMatch = selectedRegion === 'global' || asset.region === selectedRegion;
       const currencyMatch = asset.currency.toLowerCase() === selectedCurrency.toLowerCase() || (asset.currency === "USDT" && (selectedCurrency === "usd" || selectedCurrency === "usdt"));
       const blockchainMatch = selectedBlockchain === 'all' || asset.network.toLowerCase() === selectedBlockchain.toLowerCase();
       return regionMatch && currencyMatch && blockchainMatch;
     });
-  }, [selectedRegion, selectedCurrency, selectedBlockchain]);
+  }, [selectedRegion, selectedCurrency, selectedBlockchain, selectedTradeType]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -48,7 +56,24 @@ export default function HomePage() {
             </Button>
           </div>
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Trade Type</Label>
+                <RadioGroup 
+                  onValueChange={setSelectedTradeType} 
+                  value={selectedTradeType} 
+                  className="flex space-x-2 pt-2" // Added pt-2 for alignment with other inputs
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="buy" id="r_buy" />
+                    <Label htmlFor="r_buy" className="font-normal">Buy</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="sell" id="r_sell" />
+                    <Label htmlFor="r_sell" className="font-normal">Sell</Label>
+                  </div>
+                </RadioGroup>
+              </div>
               <RegionSelector
                 regions={mockRegions}
                 selectedRegion={selectedRegion}
@@ -75,7 +100,6 @@ export default function HomePage() {
           blockchainNetworks={mockBlockchainNetworks} 
         />
       </main>
-      {/* FindSellerModal is removed as it's replaced by a page */}
       <footer className="py-6 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AnonTrade. All rights reserved.
       </footer>
