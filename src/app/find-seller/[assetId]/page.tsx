@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/app/header';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { User, MessageSquare, ShieldCheck, Clock, ArrowLeft, AlertTriangle, ShoppingCart, Tag } from 'lucide-react';
 import type { Asset, MockSeller } from '@/types';
-import { mockAssets, mockSellers, getAssetPriceInUSD, MOCK_CONVERSION_RATES, mockCurrencies } from '@/data/mock';
+import { mockAssets, mockSellers, getAssetPriceInUSD as getAssetBasePriceInUSD, MOCK_CONVERSION_RATES, mockCurrencies } from '@/data/mock'; // Renamed to avoid conflict
 
 const getAssetSymbol = (assetName: string): string => {
   const parts = assetName.split(" ");
@@ -96,6 +96,7 @@ const formatConvertedDisplayPrice = (value: number, currencyCode: string, locale
 export default function FindSellerPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const assetId = typeof params.assetId === 'string' ? params.assetId : '';
   const displayCurrencyId = searchParams.get('displayCurrency') || 'usd'; // Default to 'usd'
 
@@ -117,7 +118,7 @@ export default function FindSellerPage() {
 
   const assetPriceInUSD = useMemo(() => {
     if (!asset) return 0;
-    return getAssetPriceInUSD(asset.id, mockAssets); 
+    return getAssetBasePriceInUSD(asset.id, mockAssets); 
   }, [asset]);
 
 
@@ -139,10 +140,8 @@ export default function FindSellerPage() {
         <Header />
         <main className="flex-grow container mx-auto px-4 pt-8 pb-20">
            <div className="mb-6">
-            <Button variant="outline" asChild className="mb-4">
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Marketplace
-              </Link>
+            <Button variant="outline" asChild className="mb-4" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -165,10 +164,8 @@ export default function FindSellerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 pt-8 pb-24">
         <div className="mb-6">
-          <Button variant="outline" asChild className="mb-4">
-            <Link href="/">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Marketplace
-            </Link>
+          <Button variant="outline" asChild className="mb-4" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <div className="flex items-center space-x-3 mb-2">
             {asset.icon && typeof asset.icon !== 'string' && <asset.icon className="h-10 w-10 text-primary" />}
@@ -194,7 +191,7 @@ export default function FindSellerPage() {
             }
             const displayCurrencyInfo = mockCurrencies.find(c => c.id.toLowerCase() === displayCurrencyId.toLowerCase());
             const displayCurrencyName = displayCurrencyInfo?.name || displayCurrencyId.toUpperCase();
-            const displayCurrencySymbol = displayCurrencyInfo?.symbol || displayCurrencyId.toUpperCase();
+            // const displayCurrencySymbol = displayCurrencyInfo?.symbol || displayCurrencyId.toUpperCase(); // Not used
             
             let desiredPriceInAssetCurrencyFormatted: string | null = null;
             let desiredPriceInSelectedDisplayCurrencyFormatted: string | null = null;
@@ -254,13 +251,12 @@ export default function FindSellerPage() {
                       Asking Price: {desiredPriceInAssetCurrencyFormatted}
                        {desiredPriceInSelectedDisplayCurrencyFormatted && desiredPriceInAssetCurrencyFormatted !== desiredPriceInSelectedDisplayCurrencyFormatted && asset.currency.toUpperCase() !== displayCurrencyId.toUpperCase() && (
                         <span className="ml-1 text-xs">
-                          (approx. {desiredPriceInSelectedDisplayCurrencyFormatted})
+                          ({desiredPriceInSelectedDisplayCurrencyFormatted})
                         </span>
                       )}
-                       {!desiredPriceInSelectedDisplayCurrencyFormatted && displayCurrencyId.toUpperCase() !== 'USD' && asset.currency.toUpperCase() === 'USDT' && (
-                          // if asset is USDT and display is not USD (and conversion failed for display currency), still show USD approx
+                       {!desiredPriceInSelectedDisplayCurrencyFormatted && displayCurrencyId.toUpperCase() !== 'USD' && asset.currency.toUpperCase() === 'USDT' && seller.desiredPricePerAssetUSD !== undefined && (
                            <span className="ml-1 text-xs">
-                             (approx. {formatConvertedDisplayPrice(seller.desiredPricePerAssetUSD!, 'USD', locale)})
+                             ({formatConvertedDisplayPrice(seller.desiredPricePerAssetUSD, 'USD', locale)})
                            </span>
                        )}
 
@@ -307,4 +303,3 @@ export default function FindSellerPage() {
     </div>
   );
 }
-
