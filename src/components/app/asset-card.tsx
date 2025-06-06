@@ -13,6 +13,7 @@ import Image from 'next/image';
 interface AssetCardProps {
   asset: Asset;
   blockchainNetworks: BlockchainNetwork[];
+  selectedDisplayCurrency: string; // To construct link with currency preference
 }
 
 const getMinMaxDigits = (price: number, currency: string) => {
@@ -52,7 +53,7 @@ const calculateFormattedPrice = (price: number, currency: string, locale: string
 };
 
 
-export function AssetCard({ asset, blockchainNetworks }: AssetCardProps) {
+export function AssetCard({ asset, blockchainNetworks, selectedDisplayCurrency }: AssetCardProps) {
   const [displayedPrice, setDisplayedPrice] = useState<string | null>(null);
   const [displayedVolume, setDisplayedVolume] = useState<string | null>(null);
 
@@ -120,7 +121,7 @@ export function AssetCard({ asset, blockchainNetworks }: AssetCardProps) {
       </CardContent>
       <CardFooter className="p-4 bg-muted/20">
         <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Link href={`/find-seller/${asset.id}`}>
+          <Link href={`/find-seller/${asset.id}?displayCurrency=${selectedDisplayCurrency}`}>
             <Users className="mr-2 h-4 w-4" />
             Find Seller
           </Link>

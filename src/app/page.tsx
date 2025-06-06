@@ -18,7 +18,7 @@ import { SlidersHorizontal } from 'lucide-react';
 
 export default function HomePage() {
   const [selectedRegion, setSelectedRegion] = useState<string>(mockRegions[0].id);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(mockCurrencies[0].id);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(mockCurrencies[0].id); // e.g., 'usd', 'eur'
   const [selectedBlockchain, setSelectedBlockchain] = useState<string>(mockBlockchainNetworks[0].id);
   const [selectedTradeType, setSelectedTradeType] = useState<string>('buy');
   
@@ -32,7 +32,10 @@ export default function HomePage() {
     }
     return mockAssets.filter(asset => {
       const regionMatch = selectedRegion === 'global' || asset.region === selectedRegion;
-      const currencyMatch = asset.currency.toLowerCase() === selectedCurrency.toLowerCase() || (asset.currency === "USDT" && (selectedCurrency === "usd" || selectedCurrency === "usdt"));
+      // For currency matching, if asset currency is USDT, it can match 'usd' or 'usdt' selection.
+      // Otherwise, direct match.
+      const currencyMatch = asset.currency.toLowerCase() === selectedCurrency.toLowerCase() || 
+                            (asset.currency.toUpperCase() === "USDT" && (selectedCurrency.toLowerCase() === "usd" || selectedCurrency.toLowerCase() === "usdt"));
       const blockchainMatch = selectedBlockchain === 'all' || asset.network.toLowerCase() === selectedBlockchain.toLowerCase();
       return regionMatch && currencyMatch && blockchainMatch;
     });
@@ -50,13 +53,13 @@ export default function HomePage() {
         <div className="mb-8 p-4 sm:p-6 bg-card rounded-lg shadow">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
             <h2 className="text-xl font-headline font-semibold mb-2 sm:mb-0">Filters</h2>
-            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="lg:hidden"> {/* Changed from md:hidden to lg:hidden */}
+            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="md:hidden">
               <SlidersHorizontal className="mr-2 h-4 w-4" />
               {showFilters ? 'Hide' : 'Show'} Filters
             </Button>
           </div>
           {showFilters && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"> {/* Adjusted grid classes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="trade-type-group" className="text-sm font-medium mb-2 block">Trade Type</Label>
                 <RadioGroup
@@ -87,7 +90,7 @@ export default function HomePage() {
               </div>
 
               <div>
-                <Label htmlFor="currency-selector" className="text-sm font-medium mb-2 block">Currency</Label>
+                <Label htmlFor="currency-selector" className="text-sm font-medium mb-2 block">Display Currency</Label>
                 <CurrencySelector
                   id="currency-selector"
                   currencies={mockCurrencies}
@@ -113,7 +116,8 @@ export default function HomePage() {
 
         <AssetList 
           assets={filteredAssets} 
-          blockchainNetworks={mockBlockchainNetworks} 
+          blockchainNetworks={mockBlockchainNetworks}
+          selectedDisplayCurrency={selectedCurrency} 
         />
       </main>
       <footer className="py-6 text-center text-sm text-muted-foreground border-t">

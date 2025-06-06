@@ -5,9 +5,10 @@ import { AssetCard } from './asset-card';
 interface AssetListProps {
   assets: Asset[];
   blockchainNetworks: BlockchainNetwork[];
+  selectedDisplayCurrency: string; // Added to pass to AssetCard
 }
 
-export function AssetList({ assets, blockchainNetworks }: AssetListProps) {
+export function AssetList({ assets, blockchainNetworks, selectedDisplayCurrency }: AssetListProps) {
   if (assets.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
@@ -20,7 +21,12 @@ export function AssetList({ assets, blockchainNetworks }: AssetListProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {assets.map((asset) => (
-        <AssetCard key={asset.id} asset={asset} blockchainNetworks={blockchainNetworks} />
+        <AssetCard 
+            key={asset.id} 
+            asset={asset} 
+            blockchainNetworks={blockchainNetworks} 
+            selectedDisplayCurrency={selectedDisplayCurrency}
+        />
       ))}
     </div>
   );
