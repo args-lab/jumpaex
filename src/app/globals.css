@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -99,6 +100,9 @@
 @layer base {
   * {
     @apply border-border;
+  }
+  html {
+    font-size: 90%; /* Reduces global font size */
   }
   body {
     @apply bg-background text-foreground;
