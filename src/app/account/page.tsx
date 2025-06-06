@@ -70,10 +70,10 @@ export default function AccountPage() {
   }, []);
 
   const mockUser = {
-    username: 'AnonTraderXWithAVeryLongUsernameToTestOverflow',
-    email: 'anon.trader.x.long.email.address.to.test.wrapping.and.responsiveness.andoverflow@example.com',
+    username: 'AnonTraderXWithAVeryLongUsernameToTestOverflowAndWrapping',
+    email: 'anon.trader.x.super.extra.long.email.address.to.thoroughly.test.wrapping.and.responsiveness.and.overflow.capabilities@example.com',
     joinDate: 'January 15, 2024',
-    avatarUrl: 'https://placehold.co/128x128.png', // Slightly larger avatar for this layout
+    avatarUrl: 'https://placehold.co/128x128.png', 
   };
 
   return (
@@ -85,28 +85,30 @@ export default function AccountPage() {
           <p className="text-muted-foreground text-sm sm:text-base">Manage your profile, settings, and view your portfolio.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* Profile Card */}
-          <Card className="md:col-span-1">
+          <Card>
             <CardHeader className="flex flex-col items-center text-center pt-6 pb-4">
-              <Avatar className="h-20 w-20 mb-3"> {/* Increased avatar size and margin */}
+              <Avatar className="h-20 w-20 mb-3"> 
                 <AvatarImage src={mockUser.avatarUrl} alt={mockUser.username} data-ai-hint="profile avatar" />
                 <AvatarFallback>
                   <UserCircle className="h-12 w-12 text-muted-foreground" />
                 </AvatarFallback>
               </Avatar>
-              <CardTitle className="font-headline text-xl break-words">{mockUser.username}</CardTitle>
-              <CardDescription className="w-full break-words text-sm px-2">{mockUser.email}</CardDescription>
+              <div className="min-w-0"> {/* Ensures flex item can shrink */}
+                <CardTitle className="font-headline text-xl break-words w-full">{mockUser.username}</CardTitle>
+                <CardDescription className="w-full break-words text-sm px-2">{mockUser.email}</CardDescription>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm pt-2"> {/* Adjusted top padding */}
+            <CardContent className="space-y-3 text-sm pt-2 text-center"> 
               <Separator className="my-2" />
-              <p className="text-center"><strong>Joined:</strong> {mockUser.joinDate}</p>
-              <Button variant="outline" size="sm" className="w-full">Edit Profile</Button>
+              <p><strong>Joined:</strong> {mockUser.joinDate}</p>
+              <Button variant="outline" size="sm" className="w-full max-w-xs mx-auto">Edit Profile</Button>
             </CardContent>
           </Card>
 
           {/* Portfolio Card */}
-          <Card className="md:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle className="font-headline text-xl flex items-center">
                 <DollarSign className="mr-2 h-6 w-6 text-primary" />
@@ -137,7 +139,7 @@ export default function AccountPage() {
             <CardTitle className="font-headline text-xl">Account Actions</CardTitle>
             <CardDescription>Manage your account settings and activity.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Button variant="outline" className="justify-start text-left h-auto py-3">
               <MessageSquare className="mr-3 h-5 w-5" />
               <div>
@@ -173,7 +175,7 @@ export default function AccountPage() {
                 <p className="text-xs text-muted-foreground">Learn more about AnonTrade.</p>
               </div>
             </Button>
-            <Button variant="destructive" className="justify-start text-left h-auto py-3 sm:col-span-2 lg:col-span-1">
+            <Button variant="destructive" className="justify-start text-left h-auto py-3 sm:col-span-2">
               <LogOut className="mr-3 h-5 w-5" />
                <div>
                 <p className="font-semibold">Log Out</p>
