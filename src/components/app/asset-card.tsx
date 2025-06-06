@@ -52,12 +52,14 @@ const calculateFormattedPrice = (price: number, currency: string, locale: string
 
 export function AssetCard({ asset, onChatClick, blockchainNetworks }: AssetCardProps) {
   const [displayedPrice, setDisplayedPrice] = useState<string | null>(null);
+  const [displayedVolume, setDisplayedVolume] = useState<string | null>(null);
 
   useEffect(() => {
     // This effect runs only on the client, after hydration
     // 'undefined' locale for toLocaleString uses the browser's default locale
     setDisplayedPrice(calculateFormattedPrice(asset.price, asset.currency, undefined));
-  }, [asset.price, asset.currency]);
+    setDisplayedVolume(asset.volume.toLocaleString(undefined));
+  }, [asset.price, asset.currency, asset.volume]);
 
   const networkInfo = blockchainNetworks.find(n => n.id === asset.network);
   const AssetIcon = asset.icon && typeof asset.icon !== 'string' ? asset.icon : null;
@@ -65,6 +67,7 @@ export function AssetCard({ asset, onChatClick, blockchainNetworks }: AssetCardP
 
   // Fallback for SSR and initial client render before useEffect
   const ssrFormattedPrice = `${asset.price.toFixed(getMinMaxDigits(asset.price, asset.currency))} ${asset.currency.toUpperCase()}`;
+  const ssrFormattedVolume = asset.volume.toString();
 
   return (
     <Card className="w-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -104,7 +107,7 @@ export function AssetCard({ asset, onChatClick, blockchainNetworks }: AssetCardP
         </div>
         
         <div className="text-sm text-muted-foreground">
-          Volume: {asset.volume.toLocaleString()} {asset.name.split(" ")[0]}
+          Volume: {displayedVolume !== null ? displayedVolume : ssrFormattedVolume} {asset.name.split(" ")[0]}
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
           <NetworkIcon className="mr-2 h-4 w-4 text-primary" />
