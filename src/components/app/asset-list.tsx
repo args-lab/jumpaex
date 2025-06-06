@@ -4,11 +4,10 @@ import { AssetCard } from './asset-card';
 
 interface AssetListProps {
   assets: Asset[];
-  onFindSellerClick: (asset: Asset) => void; // Renamed prop
   blockchainNetworks: BlockchainNetwork[];
 }
 
-export function AssetList({ assets, onFindSellerClick, blockchainNetworks }: AssetListProps) {
+export function AssetList({ assets, blockchainNetworks }: AssetListProps) {
   if (assets.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
@@ -21,7 +20,7 @@ export function AssetList({ assets, onFindSellerClick, blockchainNetworks }: Ass
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {assets.map((asset) => (
-        <AssetCard key={asset.id} asset={asset} onFindSellerClick={onFindSellerClick} blockchainNetworks={blockchainNetworks} />
+        <AssetCard key={asset.id} asset={asset} blockchainNetworks={blockchainNetworks} />
       ))}
     </div>
   );

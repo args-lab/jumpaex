@@ -36,9 +36,9 @@ export const mockAssets: Asset[] = [
     id: '1',
     name: 'Bitcoin',
     price: 60000,
-    currency: 'USDT',
+    currency: 'USDT', // Price is in USDT, assume 1 USDT = 1 USD for simplicity in getAssetPriceInUSD
     region: 'global',
-    network: 'bitcoin', // Matches id from mockBlockchainNetworks
+    network: 'bitcoin', 
     icon: Bitcoin,
     volume: 1.5,
     change24h: 2.5,
@@ -48,9 +48,9 @@ export const mockAssets: Asset[] = [
     id: '2',
     name: 'Ethereum',
     price: 3000,
-    currency: 'USDT',
+    currency: 'USDT', // Price is in USDT
     region: 'europe',
-    network: 'ethereum', // Matches id from mockBlockchainNetworks
+    network: 'ethereum', 
     icon: Landmark,
     volume: 10,
     change24h: -1.2,
@@ -60,9 +60,9 @@ export const mockAssets: Asset[] = [
     id: '3',
     name: 'Solana',
     price: 150,
-    currency: 'USD',
+    currency: 'USD', // Price is in USD
     region: 'asia',
-    network: 'solana', // Matches id from mockBlockchainNetworks
+    network: 'solana', 
     icon: Waves,
     volume: 100,
     change24h: 5.1,
@@ -72,9 +72,9 @@ export const mockAssets: Asset[] = [
     id: '4',
     name: 'USDC',
     price: 1,
-    currency: 'USD',
+    currency: 'USD', // Price is in USD
     region: 'north_america',
-    network: 'ethereum', // Matches id from mockBlockchainNetworks
+    network: 'ethereum', 
     icon: CircleDollarSign,
     volume: 50000,
     change24h: 0.01,
@@ -84,9 +84,9 @@ export const mockAssets: Asset[] = [
     id: '5',
     name: 'BNB',
     price: 580,
-    currency: 'USDT',
+    currency: 'USDT', // Price is in USDT
     region: 'global',
-    network: 'bsc', // Matches id from mockBlockchainNetworks
+    network: 'bsc', 
     icon: Replace,
     volume: 50,
     change24h: 1.8,
@@ -96,15 +96,52 @@ export const mockAssets: Asset[] = [
     id: '6',
     name: 'Bitcoin (EU Seller)',
     price: 52000,
-    currency: 'EUR',
+    currency: 'EUR', // Price is in EUR
     region: 'europe',
-    network: 'bitcoin', // Matches id from mockBlockchainNetworks
+    network: 'bitcoin', 
     icon: Bitcoin,
     volume: 0.5,
     change24h: 2.1,
     seller: 'EuroBitcoinMax',
   },
 ];
+
+export const MOCK_CONVERSION_RATES: Record<string, number> = {
+  USD: 1,
+  USDT: 1, // Assuming 1 USDT = 1 USD for simplicity
+  EUR: 1.08, // Example: 1 EUR = 1.08 USD
+  GBP: 1.25, // Example: 1 GBP = 1.25 USD
+};
+
+export const getAssetPriceInUSD = (assetSymbolOrId: string, assets: Asset[] = mockAssets): number => {
+  const assetInfo = assets.find(a => a.id.toUpperCase() === assetSymbolOrId.toUpperCase() || a.name.toUpperCase().startsWith(assetSymbolOrId.toUpperCase()) || a.name.toUpperCase() === assetSymbolOrId.toUpperCase());
+  
+  if (!assetInfo) {
+    // Check if it's a direct fiat currency symbol we have a rate for
+    const upperSymbol = assetSymbolOrId.toUpperCase();
+    if (MOCK_CONVERSION_RATES[upperSymbol]) {
+      return MOCK_CONVERSION_RATES[upperSymbol]; // This is actually the rate TO USD, not the price of the currency itself.
+    }
+    console.warn(`Asset or symbol ${assetSymbolOrId} not found for USD price conversion.`);
+    return 0;
+  }
+
+  const currencyUpper = assetInfo.currency.toUpperCase();
+  if (currencyUpper === 'USD') {
+    return assetInfo.price;
+  }
+  if (MOCK_CONVERSION_RATES[currencyUpper]) {
+    return assetInfo.price * MOCK_CONVERSION_RATES[currencyUpper];
+  }
+  // If currency is USDT, and USDT rate is 1, it's effectively USD.
+  if (currencyUpper === 'USDT' && MOCK_CONVERSION_RATES['USDT'] === 1) {
+      return assetInfo.price;
+  }
+
+  console.warn(`Conversion rate for ${assetInfo.currency} to USD not found. Assuming 1:1 or check MOCK_CONVERSION_RATES.`);
+  return assetInfo.price; // Fallback, might not be accurate if currency isn't USD/USDT
+};
+
 
 export const mockTransactions: Transaction[] = [
   {
@@ -287,9 +324,9 @@ export const generateMockAddress = (assetSymbol: string, networkId: string): str
 };
 
 export const mockSellers: MockSeller[] = [
-  { id: 'seller1', name: 'CryptoKing', reputation: 99, avgTradeTime: '3 mins' },
-  { id: 'seller2', name: 'ETHWhale', reputation: 97, avgTradeTime: '5 mins' },
-  { id: 'seller3', name: 'SolTraderPro', reputation: 95, avgTradeTime: '8 mins' },
-  { id: 'seller4', name: 'QuickCoins', reputation: 92, avgTradeTime: '2 mins' },
-  { id: 'seller5', name: 'TrustedTradex', reputation: 98, avgTradeTime: '10 mins' },
+  { id: 'seller1', name: 'CryptoKing', reputation: 99, avgTradeTime: '3 mins', minSellUSD: 50, maxSellUSD: 10000 },
+  { id: 'seller2', name: 'ETHWhale', reputation: 97, avgTradeTime: '5 mins', minSellUSD: 100, maxSellUSD: 50000 },
+  { id: 'seller3', name: 'SolTraderPro', reputation: 95, avgTradeTime: '8 mins', minSellUSD: 20, maxSellUSD: 2000 },
+  { id: 'seller4', name: 'QuickCoins', reputation: 92, avgTradeTime: '2 mins', minSellUSD: 10, maxSellUSD: 500 },
+  { id: 'seller5', name: 'TrustedTradex', reputation: 98, avgTradeTime: '10 mins', minSellUSD: 200, maxSellUSD: 25000 },
 ];

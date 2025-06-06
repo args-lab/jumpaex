@@ -71,4 +71,6 @@ export interface MockSeller {
   name: string;
   reputation?: number; // e.g., 98 (percentage)
   avgTradeTime?: string; // e.g., "5 mins"
+  minSellUSD: number; // Minimum sell amount in USD
+  maxSellUSD: number; // Maximum sell amount in USD
 }

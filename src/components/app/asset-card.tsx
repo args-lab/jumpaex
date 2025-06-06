@@ -2,22 +2,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import type { Asset, BlockchainNetwork } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Users, Network } from 'lucide-react'; // Changed MessageSquare to Users
+import { TrendingUp, TrendingDown, Users, Network } from 'lucide-react';
 import Image from 'next/image';
 
 interface AssetCardProps {
   asset: Asset;
-  onFindSellerClick: (asset: Asset) => void; // Renamed prop
   blockchainNetworks: BlockchainNetwork[];
 }
 
 const getMinMaxDigits = (price: number, currency: string) => {
   const upperCurrency = currency.toUpperCase();
-  return (upperCurrency === 'USDT' || upperCurrency === 'USD') ? 2 : (price < 1 ? 6 : 2);
+  if (upperCurrency === 'USDT' || upperCurrency === 'USD') {
+    return 2;
+  }
+  // For other currencies (crypto primarily), show more precision for small prices
+  return price !== 0 && Math.abs(price) < 0.01 ? 6 : (Math.abs(price) < 1 ? 4 : 2);
 };
 
 const calculateFormattedPrice = (price: number, currency: string, locale: string | undefined) => {
@@ -38,6 +42,7 @@ const calculateFormattedPrice = (price: number, currency: string, locale: string
         maximumFractionDigits: minMaxDigits,
       });
     } catch (e) {
+      // Fallback for non-standard currency codes if toLocaleString fails
       return `${price.toLocaleString(locale, {
         minimumFractionDigits: minMaxDigits,
         maximumFractionDigits: minMaxDigits,
@@ -46,13 +51,15 @@ const calculateFormattedPrice = (price: number, currency: string, locale: string
   }
 };
 
-export function AssetCard({ asset, onFindSellerClick, blockchainNetworks }: AssetCardProps) {
+
+export function AssetCard({ asset, blockchainNetworks }: AssetCardProps) {
   const [displayedPrice, setDisplayedPrice] = useState<string | null>(null);
   const [displayedVolume, setDisplayedVolume] = useState<string | null>(null);
 
   useEffect(() => {
-    setDisplayedPrice(calculateFormattedPrice(asset.price, asset.currency, undefined));
-    setDisplayedVolume(asset.volume.toLocaleString(undefined));
+    const clientLocale = typeof window !== 'undefined' ? navigator.language : undefined;
+    setDisplayedPrice(calculateFormattedPrice(asset.price, asset.currency, clientLocale));
+    setDisplayedVolume(asset.volume.toLocaleString(clientLocale));
   }, [asset.price, asset.currency, asset.volume]);
 
   const networkInfo = blockchainNetworks.find(n => n.id === asset.network);
@@ -61,6 +68,7 @@ export function AssetCard({ asset, onFindSellerClick, blockchainNetworks }: Asse
 
   const ssrFormattedPrice = `${asset.price.toFixed(getMinMaxDigits(asset.price, asset.currency))} ${asset.currency.toUpperCase()}`;
   const ssrFormattedVolume = asset.volume.toString();
+
 
   return (
     <Card className="w-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -111,9 +119,11 @@ export function AssetCard({ asset, onFindSellerClick, blockchainNetworks }: Asse
         </div>
       </CardContent>
       <CardFooter className="p-4 bg-muted/20">
-        <Button onClick={() => onFindSellerClick(asset)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Users className="mr-2 h-4 w-4" />
-          Find Seller
+        <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Link href={`/find-seller/${asset.id}`}>
+            <Users className="mr-2 h-4 w-4" />
+            Find Seller
+          </Link>
         </Button>
       </CardFooter>
     </Card>

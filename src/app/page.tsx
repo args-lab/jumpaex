@@ -7,7 +7,6 @@ import { RegionSelector } from '@/components/app/region-selector';
 import { CurrencySelector } from '@/components/app/currency-selector';
 import { BlockchainFilter } from '@/components/app/blockchain-filter';
 import { AssetList } from '@/components/app/asset-list';
-import { FindSellerModal } from '@/components/app/find-seller-modal'; // Changed from ChatModal
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 import type { Asset } from '@/types';
 import { mockAssets, mockRegions, mockCurrencies, mockBlockchainNetworks } from '@/data/mock';
@@ -20,15 +19,7 @@ export default function HomePage() {
   const [selectedCurrency, setSelectedCurrency] = useState<string>(mockCurrencies[0].id);
   const [selectedBlockchain, setSelectedBlockchain] = useState<string>(mockBlockchainNetworks[0].id);
   
-  const [isFindSellerModalOpen, setIsFindSellerModalOpen] = useState(false); // Renamed
-  const [selectedAssetForFindSeller, setSelectedAssetForFindSeller] = useState<Asset | null>(null); // Renamed
-
   const [showFilters, setShowFilters] = useState(true);
-
-  const handleFindSellerClick = (asset: Asset) => { // Renamed
-    setSelectedAssetForFindSeller(asset);
-    setIsFindSellerModalOpen(true);
-  };
 
   const filteredAssets = useMemo(() => {
     return mockAssets.filter(asset => {
@@ -81,15 +72,10 @@ export default function HomePage() {
 
         <AssetList 
           assets={filteredAssets} 
-          onFindSellerClick={handleFindSellerClick} // Updated prop
           blockchainNetworks={mockBlockchainNetworks} 
         />
       </main>
-      <FindSellerModal // Changed from ChatModal
-        isOpen={isFindSellerModalOpen}
-        onOpenChange={setIsFindSellerModalOpen}
-        asset={selectedAssetForFindSeller}
-      />
+      {/* FindSellerModal is removed as it's replaced by a page */}
       <footer className="py-6 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AnonTrade. All rights reserved.
       </footer>
