@@ -186,12 +186,6 @@ export default function FindSellerPage() {
             {typeof asset.icon === 'string' && <Image src={asset.icon} alt={asset.name} width={40} height={40} className="rounded-full" data-ai-hint={`${asset.name} logo`} />}
             <h1 className="text-3xl font-headline font-bold">Sellers for {asset.name}</h1>
           </div>
-          <p className="text-muted-foreground">
-            Find sellers offering {asset.name}. Current market price: {displayAssetNativePrice}
-            {convertedPriceFormatted && asset.currency.toLowerCase() !== displayCurrencyId.toLowerCase() && (
-                <> (approx. {convertedPriceFormatted})</>
-            )}.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
