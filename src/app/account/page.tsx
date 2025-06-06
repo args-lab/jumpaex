@@ -71,9 +71,9 @@ export default function AccountPage() {
 
   const mockUser = {
     username: 'AnonTraderX',
-    email: 'anon.trader.x.long.email.address.to.test.wrapping@example.com',
+    email: 'anon.trader.x.long.email.address.to.test.wrapping.and.responsiveness@example.com',
     joinDate: 'January 15, 2024',
-    avatarUrl: 'https://placehold.co/100x100.png',
+    avatarUrl: 'https://placehold.co/128x128.png', // Slightly larger avatar for this layout
   };
 
   return (
@@ -88,20 +88,19 @@ export default function AccountPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Profile Card */}
           <Card className="md:col-span-1">
-            <CardHeader className="flex flex-row items-center space-x-4 pb-4">
-              <Avatar className="h-16 w-16">
+            <CardHeader className="flex flex-col items-center text-center pt-6 pb-4">
+              <Avatar className="h-20 w-20 mb-3"> {/* Increased avatar size and margin */}
                 <AvatarImage src={mockUser.avatarUrl} alt={mockUser.username} data-ai-hint="profile avatar" />
                 <AvatarFallback>
-                  <UserCircle className="h-10 w-10 text-muted-foreground" />
+                  <UserCircle className="h-12 w-12 text-muted-foreground" />
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
-                <CardTitle className="font-headline text-xl">{mockUser.username}</CardTitle>
-                <CardDescription className="break-words">{mockUser.email}</CardDescription>
-              </div>
+              <CardTitle className="font-headline text-xl">{mockUser.username}</CardTitle>
+              <CardDescription className="break-words text-sm px-2">{mockUser.email}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p><strong>Joined:</strong> {mockUser.joinDate}</p>
+            <CardContent className="space-y-3 text-sm pt-2"> {/* Adjusted top padding */}
+              <Separator className="my-2" />
+              <p className="text-center"><strong>Joined:</strong> {mockUser.joinDate}</p>
               <Button variant="outline" size="sm" className="w-full">Edit Profile</Button>
             </CardContent>
           </Card>
