@@ -1,4 +1,4 @@
-import type { Asset, Region, Currency, BlockchainNetwork } from '@/types';
+import type { Asset, Region, Currency, BlockchainNetwork, Transaction } from '@/types';
 import { Bitcoin, Landmark, Waves, CircleDollarSign, Replace } from 'lucide-react';
 
 export const mockRegions: Region[] = [
@@ -99,5 +99,73 @@ export const mockAssets: Asset[] = [
     volume: 0.5,
     change24h: 2.1,
     seller: 'UserF',
+  },
+];
+
+export const mockTransactions: Transaction[] = [
+  {
+    id: 'tx1',
+    assetName: 'Bitcoin',
+    assetIcon: Bitcoin,
+    type: 'Buy',
+    amount: 0.005,
+    price: 60000,
+    currency: 'USD',
+    total: 300,
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    status: 'Completed',
+    counterparty: 'UserX',
+  },
+  {
+    id: 'tx2',
+    assetName: 'Ethereum',
+    assetIcon: Landmark,
+    type: 'Sell',
+    amount: 0.1,
+    price: 3000,
+    currency: 'USD',
+    total: 300,
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+    status: 'Completed',
+    counterparty: 'UserY',
+  },
+  {
+    id: 'tx3',
+    assetName: 'Solana',
+    assetIcon: Waves,
+    type: 'Buy',
+    amount: 10,
+    price: 150,
+    currency: 'EUR',
+    total: 1500,
+    date: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
+    status: 'Pending',
+    counterparty: 'UserZ',
+  },
+  {
+    id: 'tx4',
+    assetName: 'USDC',
+    assetIcon: CircleDollarSign, // Using generic USDC icon
+    type: 'Sell',
+    amount: 1000,
+    price: 0.99,
+    currency: 'EUR',
+    total: 990,
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    status: 'Failed',
+    counterparty: 'UserA',
+  },
+  {
+    id: 'tx5',
+    assetName: 'BNB',
+    assetIcon: Replace, // Using generic BNB icon
+    type: 'Buy',
+    amount: 1,
+    price: 580,
+    currency: 'USDT',
+    total: 580,
+    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+    status: 'Cancelled',
+    counterparty: 'UserB',
   },
 ];

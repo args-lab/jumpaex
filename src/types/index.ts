@@ -29,3 +29,17 @@ export interface BlockchainNetwork {
   name: string;
   icon?: LucideIcon | string;
 }
+
+export interface Transaction {
+  id: string;
+  assetName: string;
+  assetIcon?: LucideIcon | string;
+  type: 'Buy' | 'Sell';
+  amount: number; // Amount of crypto
+  price: number; // Price per unit in fiat
+  currency: string; // Fiat currency (e.g., USD, EUR, USDT)
+  total: number; // total fiat value (amount * price)
+  date: string; // ISO string or Date object
+  status: 'Completed' | 'Pending' | 'Failed' | 'Cancelled';
+  counterparty: string; // Who the trade was with
+}
