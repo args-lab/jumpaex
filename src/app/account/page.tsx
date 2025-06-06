@@ -70,8 +70,8 @@ export default function AccountPage() {
   }, []);
 
   const mockUser = {
-    username: 'AnonTraderX',
-    email: 'anon.trader.x.long.email.address.to.test.wrapping.and.responsiveness@example.com',
+    username: 'AnonTraderXWithAVeryLongUsernameToTestOverflow',
+    email: 'anon.trader.x.long.email.address.to.test.wrapping.and.responsiveness.andoverflow@example.com',
     joinDate: 'January 15, 2024',
     avatarUrl: 'https://placehold.co/128x128.png', // Slightly larger avatar for this layout
   };
@@ -95,8 +95,8 @@ export default function AccountPage() {
                   <UserCircle className="h-12 w-12 text-muted-foreground" />
                 </AvatarFallback>
               </Avatar>
-              <CardTitle className="font-headline text-xl">{mockUser.username}</CardTitle>
-              <CardDescription className="break-words text-sm px-2">{mockUser.email}</CardDescription>
+              <CardTitle className="font-headline text-xl break-words">{mockUser.username}</CardTitle>
+              <CardDescription className="w-full break-words text-sm px-2">{mockUser.email}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm pt-2"> {/* Adjusted top padding */}
               <Separator className="my-2" />
