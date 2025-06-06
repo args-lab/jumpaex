@@ -71,7 +71,7 @@ export default function AccountPage() {
 
   const mockUser = {
     username: 'AnonTraderX',
-    email: 'anon.trader.x@example.com',
+    email: 'anon.trader.x.long.email.address.to.test.wrapping@example.com',
     joinDate: 'January 15, 2024',
     avatarUrl: 'https://placehold.co/100x100.png',
   };
@@ -97,7 +97,7 @@ export default function AccountPage() {
               </Avatar>
               <div>
                 <CardTitle className="font-headline text-xl">{mockUser.username}</CardTitle>
-                <CardDescription>{mockUser.email}</CardDescription>
+                <CardDescription className="break-words">{mockUser.email}</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
