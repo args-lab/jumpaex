@@ -72,14 +72,14 @@ const formatConvertedDisplayPrice = (value: number, currencyCode: string, locale
 
     if (targetCurrencyInfo && targetCurrencyInfo.id.toUpperCase() !== 'USDT') { // USDT is not a standard 'currency' style
          try {
-            return value.toLocaleString(locale, { style: 'currency', currency: targetCurrencyInfo.id, minimumFractionDigits, maximumFractionDigits });
+            return value.toLocaleString(locale, { style: 'currency', currency: targetCurrencyInfo.id, minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits });
         } catch (e) {
             // Fallback if currency style fails
-            return `${value.toLocaleString(locale, { minimumFractionDigits, maximumFractionDigits })} ${displaySymbol}`;
+            return `${value.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits })} ${displaySymbol}`;
         }
     }
     // For USDT or if style:'currency' fails or not applicable
-    return `${value.toLocaleString(locale, { minimumFractionDigits, maximumFractionDigits })} ${displaySymbol}`;
+    return `${value.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: maxFractionDigits })} ${displaySymbol}`;
 };
 
 
