@@ -24,13 +24,10 @@ import { format as formatDateFns } from 'date-fns';
 
 // Helper to determine decimal places for wallet transactions
 const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
-  // Fiat currencies (USD, EUR, etc.) usually have 2 decimal places
-  // For crypto, more precision is often needed, especially for smaller amounts.
-  const fiatSymbols = ['USD', 'EUR', 'GBP', 'JPY']; // Add more as needed
+  const fiatSymbols = ['USD', 'EUR', 'GBP', 'JPY']; 
   if (fiatSymbols.includes(assetSymbol.toUpperCase())) {
     return 2;
   }
-  // For crypto, if amount is small, show more digits, otherwise cap at 8.
   return amount < 0.000001 ? 8 : (amount < 1 ? 6 : 4);
 };
 
@@ -63,14 +60,20 @@ export default function WalletPage() {
     );
   }, []);
 
-  // Use formattedWalletTransactions if available (client-side), otherwise use mockWalletTransactions with SSR-safe formatting
   const transactionsToDisplay = formattedWalletTransactions.length > 0
     ? formattedWalletTransactions
-    : mockWalletTransactions.map(tx => ({
-        ...tx,
-        displayAmount: `${tx.amount.toFixed(getWalletAmountMinMaxDigits(tx.amount, tx.assetSymbol))} ${tx.assetSymbol.toUpperCase()}`,
-        displayDate: formatDateFns(new Date(tx.date), 'yyyy-MM-dd HH:mm'), // Basic, non-locale specific format for SSR
-  }));
+    : mockWalletTransactions.map(tx => {
+        // tx.date is an ISO string like "2024-06-07T12:30:00.000Z"
+        // For SSR and initial client render, create a consistent UTC-based string.
+        // Example: "2024-06-07 12:30"
+        const ssrDisplayDate = tx.date.substring(0, 10) + ' ' + tx.date.substring(11, 16);
+        
+        return {
+          ...tx,
+          displayAmount: `${tx.amount.toFixed(getWalletAmountMinMaxDigits(tx.amount, tx.assetSymbol))} ${tx.assetSymbol.toUpperCase()}`,
+          displayDate: ssrDisplayDate,
+        };
+      });
 
   const getStatusVariant = (status: WalletTransactionType['status']) => {
     switch (status) {
@@ -97,14 +100,11 @@ export default function WalletPage() {
     if (typeof assetIcon === 'string') {
       return <Image src={assetIcon} alt={assetName} width={24} height={24} className="rounded-full mr-2 shrink-0" data-ai-hint={`${assetName} logo`} />;
     }
-    // Fallback for symbols like USD, EUR if no specific icon is provided, or generic crypto.
     if (['USD', 'EUR', 'GBP', 'JPY'].includes(assetSymbol.toUpperCase()) ) {
         return <DollarSign className="h-6 w-6 mr-2 shrink-0 text-muted-foreground" />;
     }
     return <HelpCircle className="h-6 w-6 mr-2 shrink-0 text-muted-foreground" />;
-
   };
-
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

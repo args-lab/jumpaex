@@ -20,13 +20,11 @@ import { ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, AlertCircle }
 import Image from 'next/image';
 import { format as formatDateFns } from 'date-fns';
 
-// Helper to determine decimal places
 const getMinMaxDigits = (value: number, currency: string) => {
   const upperCurrency = currency.toUpperCase();
   return (upperCurrency === 'USDT' || upperCurrency === 'USD') ? 2 : (value < 1 ? 6 : 2);
 };
 
-// Helper function to format price client-side
 const calculateFormattedCurrency = (value: number, currency: string, locale: string | undefined) => {
   const upperCurrency = currency.toUpperCase();
   const minMaxDigits = getMinMaxDigits(value, currency);
@@ -45,7 +43,6 @@ const calculateFormattedCurrency = (value: number, currency: string, locale: str
         maximumFractionDigits: minMaxDigits,
       });
     } catch (e) {
-      // Fallback for any other currency codes that might not be ISO-compliant
       return `${value.toLocaleString(locale, {
         minimumFractionDigits: minMaxDigits,
         maximumFractionDigits: minMaxDigits,
@@ -77,16 +74,22 @@ export default function TransactionsPage() {
     );
   }, []);
 
-  // Use formattedTransactions if available (client-side), otherwise use mockTransactions with SSR-safe formatting
   const transactionsToDisplay = formattedTransactions.length > 0
     ? formattedTransactions
-    : mockTransactions.map(tx => ({
-        ...tx,
-        displayPrice: `${tx.price.toFixed(getMinMaxDigits(tx.price, tx.currency))} ${tx.currency.toUpperCase()}`,
-        displayTotal: `${tx.total.toFixed(getMinMaxDigits(tx.total, tx.currency))} ${tx.currency.toUpperCase()}`,
-        displayDate: formatDateFns(new Date(tx.date), 'yyyy-MM-dd HH:mm'), // Basic, non-locale specific format for SSR
-        displayAmount: parseFloat(tx.amount.toFixed(8)).toString(), // SSR-safe amount formatting
-  }));
+    : mockTransactions.map(tx => {
+        // tx.date is an ISO string like "2024-06-07T12:30:00.000Z"
+        // For SSR and initial client render, create a consistent UTC-based string.
+        // Example: "2024-06-07 12:30"
+        const ssrDisplayDate = tx.date.substring(0, 10) + ' ' + tx.date.substring(11, 16);
+
+        return {
+          ...tx,
+          displayPrice: `${tx.price.toFixed(getMinMaxDigits(tx.price, tx.currency))} ${tx.currency.toUpperCase()}`,
+          displayTotal: `${tx.total.toFixed(getMinMaxDigits(tx.total, tx.currency))} ${tx.currency.toUpperCase()}`,
+          displayDate: ssrDisplayDate,
+          displayAmount: parseFloat(tx.amount.toFixed(8)).toString(),
+        };
+      });
 
 
   const getStatusVariant = (status: TransactionType['status']) => {
@@ -101,9 +104,9 @@ export default function TransactionsPage() {
 
   const getTypeAttributes = (type: TransactionType['type']) => {
     if (type === 'Buy') {
-      return { Icon: ArrowDownLeft, color: 'text-green-500' }; // Using direct color for semantic meaning
+      return { Icon: ArrowDownLeft, color: 'text-green-500' };
     }
-    return { Icon: ArrowUpRight, color: 'text-red-500' }; // Using direct color for semantic meaning
+    return { Icon: ArrowUpRight, color: 'text-red-500' };
   };
 
   const getAssetDisplay = (assetIcon: TransactionType['assetIcon'], assetName: string) => {
@@ -179,7 +182,6 @@ export default function TransactionsPage() {
               })}
             </TableBody>
           </Table>
-           {/* Loading state indication if mockTransactions has items but formattedTransactions is not yet populated */}
            {mockTransactions.length > 0 && formattedTransactions.length === 0 && (
              <div className="text-center py-10 text-muted-foreground">
                 <p className="text-lg">Loading transactions...</p>
@@ -191,4 +193,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
