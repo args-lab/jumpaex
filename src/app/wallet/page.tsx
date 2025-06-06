@@ -26,11 +26,11 @@ import { WithdrawModal } from '@/components/app/withdraw-modal'; // Import Withd
 
 // Helper to determine decimal places for wallet transactions
 const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
-  const fiatSymbols = ['USD', 'EUR', 'GBP', 'JPY']; 
+  const fiatSymbols = ['USD', 'EUR', 'GBP', 'JPY'];
   if (fiatSymbols.includes(assetSymbol.toUpperCase())) {
     return 2;
   }
-  return amount < 0.000001 ? 8 : (amount < 1 ? 6 : 4);
+  return amount !== 0 && Math.abs(amount) < 0.000001 ? 8 : (Math.abs(amount) < 1 ? 6 : 4);
 };
 
 // Helper function to format amount client-side
@@ -68,7 +68,7 @@ export default function WalletPage() {
     ? formattedWalletTransactions
     : mockWalletTransactions.map(tx => {
         const ssrDisplayDate = tx.date.substring(0, 10) + ' ' + tx.date.substring(11, 16);
-        
+
         return {
           ...tx,
           displayAmount: `${tx.amount.toFixed(getWalletAmountMinMaxDigits(tx.amount, tx.assetSymbol))} ${tx.assetSymbol.toUpperCase()}`,
@@ -92,7 +92,7 @@ export default function WalletPage() {
     }
     return { Icon: ArrowUpFromLine, color: 'text-red-500', label: 'Withdrawal' };
   };
-  
+
   const getAssetDisplay = (assetIcon: WalletTransactionType['assetIcon'], assetName: string, assetSymbol: string) => {
     const AssetIconComponent = assetIcon && typeof assetIcon !== 'string' ? assetIcon : null;
     if (AssetIconComponent) {
@@ -119,16 +119,16 @@ export default function WalletPage() {
         <div className="mb-8 p-4 sm:p-6 bg-card rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4 font-headline">Actions</h2>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
               onClick={() => setIsDepositModalOpen(true)}
             >
               <ArrowDownToLine className="mr-2 h-5 w-5" /> Deposit Funds
             </Button>
-            <Button 
-              variant="destructive" 
-              size="lg" 
+            <Button
+              variant="destructive"
+              size="lg"
               className="flex-1 bg-red-600 hover:bg-red-700 text-white"
               onClick={() => setIsWithdrawModalOpen(true)} // Open WithdrawModal
             >
