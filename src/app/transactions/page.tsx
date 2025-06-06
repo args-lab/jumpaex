@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -57,6 +58,7 @@ interface FormattedTransaction extends TransactionType {
   displayPrice: string;
   displayTotal: string;
   displayDate: string;
+  displayAmount: string;
 }
 
 export default function TransactionsPage() {
@@ -69,19 +71,21 @@ export default function TransactionsPage() {
         ...tx,
         displayPrice: calculateFormattedCurrency(tx.price, tx.currency, locale),
         displayTotal: calculateFormattedCurrency(tx.total, tx.currency, locale),
-        displayDate: formatDateFns(new Date(tx.date), 'PPp'), 
+        displayDate: formatDateFns(new Date(tx.date), 'PPp'),
+        displayAmount: tx.amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 8 }),
       }))
     );
   }, []);
 
   // Use formattedTransactions if available (client-side), otherwise use mockTransactions with SSR-safe formatting
-  const transactionsToDisplay = formattedTransactions.length > 0 
-    ? formattedTransactions 
+  const transactionsToDisplay = formattedTransactions.length > 0
+    ? formattedTransactions
     : mockTransactions.map(tx => ({
         ...tx,
         displayPrice: `${tx.price.toFixed(getMinMaxDigits(tx.price, tx.currency))} ${tx.currency.toUpperCase()}`,
         displayTotal: `${tx.total.toFixed(getMinMaxDigits(tx.total, tx.currency))} ${tx.currency.toUpperCase()}`,
         displayDate: formatDateFns(new Date(tx.date), 'yyyy-MM-dd HH:mm'), // Basic, non-locale specific format for SSR
+        displayAmount: parseFloat(tx.amount.toFixed(8)).toString(), // SSR-safe amount formatting
   }));
 
 
@@ -156,7 +160,7 @@ export default function TransactionsPage() {
                         {tx.type}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-mono">{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</TableCell>
+                    <TableCell className="text-right font-mono">{tx.displayAmount}</TableCell>
                     <TableCell className="text-right font-mono">{tx.displayPrice}</TableCell>
                     <TableCell className="text-right font-mono">{tx.displayTotal}</TableCell>
                     <TableCell className="font-mono text-xs">{tx.displayDate}</TableCell>
@@ -187,3 +191,4 @@ export default function TransactionsPage() {
     </div>
   );
 }
+
