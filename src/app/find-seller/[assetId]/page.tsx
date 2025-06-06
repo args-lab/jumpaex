@@ -4,35 +4,33 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Header } from '@/components/app/header';
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
-import { ChatModal } from '@/components/app/chat-modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { User, MessageSquare, ShieldCheck, Clock, ArrowLeft, AlertTriangle, ShoppingCart } from 'lucide-react';
-import type { Asset, MockSeller, BlockchainNetwork } from '@/types';
-import { mockAssets, mockSellers, mockBlockchainNetworks, getAssetPriceInUSD } from '@/data/mock';
-import Link from 'next/link';
+import type { Asset, MockSeller } from '@/types';
+import { mockAssets, mockSellers, getAssetPriceInUSD } from '@/data/mock';
 
 const getAssetSymbol = (assetName: string): string => {
   const parts = assetName.split(" ");
-  return parts[0]; // e.g., "Bitcoin" -> "Bitcoin", "USD Coin" -> "USD" (simple heuristic)
+  return parts[0]; 
 }
 
-// Helper to format amount client-side with appropriate precision for crypto
 const formatCryptoAmount = (amount: number, locale: string | undefined, assetSymbol?: string) => {
   let minDigits = 2;
   let maxDigits = 2;
 
   if (amount !== 0) {
-    if (Math.abs(amount) < 0.000001) { // Very small amounts
+    if (Math.abs(amount) < 0.000001) { 
       minDigits = 8;
       maxDigits = 8;
-    } else if (Math.abs(amount) < 0.01) { // Small amounts
+    } else if (Math.abs(amount) < 0.01) { 
       minDigits = 6;
       maxDigits = 6;
-    } else if (Math.abs(amount) < 1) { // Amounts less than 1
+    } else if (Math.abs(amount) < 1) { 
       minDigits = 4;
       maxDigits = 4;
     }
@@ -45,7 +43,6 @@ const formatCryptoAmount = (amount: number, locale: string | undefined, assetSym
   return `${formattedAmount} ${assetSymbol || ''}`.trim();
 };
 
-// Helper to format asset price
 const formatAssetPrice = (price: number, currency: string, locale: string | undefined, assetName: string) => {
   const symbol = getAssetSymbol(assetName);
   const minFractionDigits = symbol === 'BTC' || symbol === 'ETH' ? 4 : 2;
@@ -56,7 +53,6 @@ const formatAssetPrice = (price: number, currency: string, locale: string | unde
   try {
     return price.toLocaleString(locale, { style: 'currency', currency: currency, minimumFractionDigits: minFractionDigits });
   } catch (e) {
-    // Fallback for non-standard currency codes
     return `${price.toLocaleString(locale, { minimumFractionDigits: minFractionDigits, maximumFractionDigits: minFractionDigits })} ${currency.toUpperCase()}`;
   }
 };
@@ -66,8 +62,7 @@ export default function FindSellerPage() {
   const params = useParams();
   const assetId = typeof params.assetId === 'string' ? params.assetId : '';
 
-  const [asset, setAsset] = useState<Asset | null | undefined>(undefined); // undefined for loading, null if not found
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [asset, setAsset] = useState<Asset | null | undefined>(undefined); 
   const [locale, setLocale] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -82,11 +77,6 @@ export default function FindSellerPage() {
       setAsset(foundAsset || null);
     }
   }, [assetId]);
-
-  const handleChatWithSellerClick = (seller: MockSeller) => {
-    // The asset for the chat is the current page's asset
-    setIsChatModalOpen(true);
-  };
 
   const assetPriceInUSD = useMemo(() => {
     if (!asset) return 0;
@@ -194,13 +184,15 @@ export default function FindSellerPage() {
                         Sell Range ({assetSymbolDisplay}): {formatCryptoAmount(minSellInAsset, locale)} - {formatCryptoAmount(maxSellInAsset, locale, assetSymbolDisplay)}
                      </div>
                   )}
-                   <Button 
-                      onClick={() => handleChatWithSellerClick(seller)} 
-                      size="sm" 
-                      className="w-full mt-3"
+                  <Button 
+                    asChild
+                    size="sm" 
+                    className="w-full mt-3"
                   >
+                    <Link href={`/chat/${asset.id}/${seller.id}`}>
                       <MessageSquare className="mr-2 h-4 w-4" />
                       Chat with {seller.name}
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -211,11 +203,6 @@ export default function FindSellerPage() {
             <p className="text-center text-muted-foreground py-10 text-lg">No other sellers found for this asset currently.</p>
         )}
       </main>
-      <ChatModal
-        isOpen={isChatModalOpen}
-        onOpenChange={setIsChatModalOpen}
-        asset={asset} 
-      />
       <BottomNavigationBar />
     </div>
   );
