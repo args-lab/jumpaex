@@ -45,6 +45,22 @@ const formatCryptoAmount = (amount: number, locale: string | undefined, assetSym
   return `${formattedAmount} ${assetSymbol || ''}`.trim();
 };
 
+// Helper to format asset price
+const formatAssetPrice = (price: number, currency: string, locale: string | undefined, assetName: string) => {
+  const symbol = getAssetSymbol(assetName);
+  const minFractionDigits = symbol === 'BTC' || symbol === 'ETH' ? 4 : 2;
+  
+  if (currency.toUpperCase() === 'USDT') {
+    return `${price.toLocaleString(locale, { minimumFractionDigits, maximumFractionDigits: minFractionDigits })} USDT`;
+  }
+  try {
+    return price.toLocaleString(locale, { style: 'currency', currency: currency, minimumFractionDigits });
+  } catch (e) {
+    // Fallback for non-standard currency codes
+    return `${price.toLocaleString(locale, { minimumFractionDigits, maximumFractionDigits: minFractionDigits })} ${currency.toUpperCase()}`;
+  }
+};
+
 
 export default function FindSellerPage() {
   const params = useParams();
@@ -115,6 +131,7 @@ export default function FindSellerPage() {
   }
   
   const assetSymbolDisplay = getAssetSymbol(asset.name);
+  const displayAssetPrice = formatAssetPrice(asset.price, asset.currency, locale, asset.name);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -132,7 +149,7 @@ export default function FindSellerPage() {
             <h1 className="text-3xl font-headline font-bold">Sellers for {asset.name}</h1>
           </div>
           <p className="text-muted-foreground">
-            Find sellers offering {asset.name}. Current price approx: {asset.price.toLocaleString(locale, { style: 'currency', currency: asset.currency, minimumFractionDigits: getAssetSymbol(asset.name) === 'BTC' || getAssetSymbol(asset.name) === 'ETH' ? 4 : 2 })}.
+            Find sellers offering {asset.name}. Current price approx: {displayAssetPrice}.
           </p>
         </div>
 
