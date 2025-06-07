@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { mockWalletTransactions, mockAssets } from '@/data/mock';
 import type { WalletTransaction } from '@/types';
-import { DollarSign, HelpCircle } from 'lucide-react'; // Added HelpCircle for generic crypto
+import { DollarSign, HelpCircle } from 'lucide-react';
 
 // Mock conversion rates (can be fetched from an API in a real app)
 const MOCK_CONVERSION_RATES: Record<string, number> = {
@@ -36,40 +36,33 @@ const getAssetPriceInUSD = (assetSymbol: string): number => {
   if (assetInfo) {
     return assetInfo.currency.toUpperCase() === 'USDT' ? assetInfo.price * MOCK_CONVERSION_RATES['USDT'] : assetInfo.price;
   }
-  // Fallback for crypto assets not in mockAssets price list but in wallet transactions, assume price is 1 for calculation simplicity if not found
-  // This scenario should be rare if mockAssets is comprehensive for owned crypto.
   const walletAsset = mockWalletTransactions.find(tx => tx.assetSymbol.toUpperCase() === upperSymbol);
-  if (walletAsset && !['USD', 'EUR', 'GBP', 'JPY'].includes(upperSymbol)) { // If it's a crypto
-     // Attempt to find its price in mockAssets by name if symbol match failed
+  if (walletAsset && !['USD', 'EUR', 'GBP', 'JPY'].includes(upperSymbol)) {
      const foundByName = mockAssets.find(a => a.name === walletAsset.assetName);
      if (foundByName) {
        return foundByName.currency.toUpperCase() === 'USDT' ? foundByName.price * MOCK_CONVERSION_RATES['USDT'] : foundByName.price;
      }
      console.warn(`Price for ${assetSymbol} not found in mockAssets, defaulting to 0 for USD value calculation.`);
-     return 0; // Default to 0 if price truly unknown to avoid overestimation
+     return 0;
   }
   return 0; 
 };
 
-
-// Helper to determine decimal places for wallet transactions
 const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
   const fiatSymbols = ['USD', 'EUR', 'GBP', 'JPY']; 
   if (fiatSymbols.includes(assetSymbol.toUpperCase())) {
     return 2;
   }
-  // For crypto, show more precision for small amounts
   return amount !== 0 && Math.abs(amount) < 0.000001 ? 8 : (Math.abs(amount) < 1 ? 6 : 4);
 };
 
-// Helper function to format amount client-side
-const formatWalletAmount = (amount: number, assetSymbol: string, locale: string | undefined) => {
+// Helper function to format crypto numeric part client-side
+const formatCryptoNumericString = (amount: number, assetSymbol: string, locale: string | undefined) => {
   const minMaxDigits = getWalletAmountMinMaxDigits(amount, assetSymbol);
-  const formattedAmount = amount.toLocaleString(locale, {
+  return amount.toLocaleString(locale, {
     minimumFractionDigits: minMaxDigits,
     maximumFractionDigits: minMaxDigits,
   });
-  return `${formattedAmount} ${assetSymbol.toUpperCase()}`;
 };
 
 // Helper to format currency values (USD)
@@ -89,9 +82,8 @@ interface DisplayableUserAsset {
   balance: number;
   valueUSD: number;
   isFiat: boolean;
-  // For client-side formatting
-  displayBalance: string;
-  displayValueUSD: string;
+  formattedBalance: string; // Just the number e.g. "0.1000"
+  formattedValueUSD: string; // Full currency string e.g. "$300.00"
 }
 
 export default function AssetsPage() {
@@ -117,7 +109,7 @@ export default function AssetsPage() {
           isFiat: ['USD', 'EUR', 'GBP', 'JPY'].includes(symbolUpper),
         };
       }
-      if (tx.status === 'Completed') { // Only count completed transactions for balance
+      if (tx.status === 'Completed') {
         if (tx.type === 'Deposit') {
           calculatedAssetBalances[symbolUpper].totalAmount += tx.amount;
         } else if (tx.type === 'Withdrawal') {
@@ -128,99 +120,71 @@ export default function AssetsPage() {
 
     const locale = typeof window !== 'undefined' ? navigator.language : undefined;
 
-    const formatted = Object.entries(calculatedAssetBalances)
-      .map(([symbol, data]) => {
-        if (data.totalAmount === 0 && !data.isFiat) return null; // Don't show zero-balance crypto assets unless it's a fiat account (which might be 0)
-
-        const priceInUSD = data.isFiat ? MOCK_CONVERSION_RATES[symbol] || 0 : getAssetPriceInUSD(symbol);
-        const valueUSD = data.totalAmount * priceInUSD;
-        
-        // SSR-friendly formats
-        const ssrDisplayBalance = `${data.totalAmount.toFixed(getWalletAmountMinMaxDigits(data.totalAmount, symbol))} ${symbol.toUpperCase()}`;
-        const ssrDisplayValueUSD = `$${valueUSD.toFixed(2)}`;
-
-        return {
-          symbol: symbol,
-          name: data.name,
-          icon: data.icon,
-          balance: data.totalAmount,
-          valueUSD: valueUSD,
-          isFiat: data.isFiat,
-          displayBalance: formatWalletAmount(data.totalAmount, symbol, locale), // Will be updated client-side by this effect
-          displayValueUSD: data.isFiat ? formatWalletAmount(data.totalAmount * (MOCK_CONVERSION_RATES[symbol] || 0) , 'USD', locale) : formatCurrencyValue(valueUSD, locale), // Same here
-        };
-      })
-      .filter(Boolean) as DisplayableUserAsset[];
-      
-    // For initial client render before this effect properly sets locale formats
-    const initialFormatted = formatted.map(asset => ({
+    const processAndFormat = (data: typeof calculatedAssetBalances) => {
+        return Object.entries(data)
+            .map(([symbol, assetData]) => {
+                if (assetData.totalAmount === 0 && !assetData.isFiat) return null;
+                const priceInUSD = assetData.isFiat ? MOCK_CONVERSION_RATES[symbol] || 0 : getAssetPriceInUSD(symbol);
+                const valueUSD = assetData.totalAmount * priceInUSD;
+                return {
+                    symbol: symbol,
+                    name: assetData.name,
+                    icon: assetData.icon,
+                    balance: assetData.totalAmount,
+                    valueUSD: valueUSD,
+                    isFiat: assetData.isFiat,
+                    formattedBalance: formatCryptoNumericString(assetData.totalAmount, symbol, locale),
+                    formattedValueUSD: formatCurrencyValue(valueUSD, locale),
+                };
+            })
+            .filter(Boolean) as DisplayableUserAsset[];
+    };
+    
+    const initialFormatted = processAndFormat(calculatedAssetBalances).map(asset => ({
         ...asset,
-        displayBalance: `${asset.balance.toFixed(getWalletAmountMinMaxDigits(asset.balance, asset.symbol))} ${asset.symbol.toUpperCase()}`,
-        displayValueUSD: `$${asset.valueUSD.toFixed(2)}`
+        formattedBalance: asset.balance.toFixed(getWalletAmountMinMaxDigits(asset.balance, asset.symbol)),
+        formattedValueUSD: `$${asset.valueUSD.toFixed(2)}` // Simple USD for SSR
     }));
 
-
-    // Set initial state for SSR/hydration match
     if (displayableBalances.length === 0 && isLoadingBalances) {
        setDisplayableBalances(initialFormatted);
     }
     
-    // Then update with client-specific locale formatting
-    // This timeout ensures the state update happens after the initial render pass
     setTimeout(() => {
-        const clientFormatted = Object.entries(calculatedAssetBalances)
-            .map(([symbol, data]) => {
-                 if (data.totalAmount === 0 && !data.isFiat) return null;
-                 const priceInUSD = data.isFiat ? MOCK_CONVERSION_RATES[symbol] || 0 : getAssetPriceInUSD(symbol);
-                 const valueUSD = data.totalAmount * priceInUSD;
-                 return {
-                    symbol: symbol,
-                    name: data.name,
-                    icon: data.icon,
-                    balance: data.totalAmount,
-                    valueUSD: valueUSD,
-                    isFiat: data.isFiat,
-                    displayBalance: formatWalletAmount(data.totalAmount, symbol, locale),
-                    displayValueUSD: data.isFiat ? formatWalletAmount(data.totalAmount * (MOCK_CONVERSION_RATES[symbol] || 0), 'USD', locale) : formatCurrencyValue(valueUSD, locale),
-                 };
-            })
-            .filter(Boolean) as DisplayableUserAsset[];
+        const clientFormatted = processAndFormat(calculatedAssetBalances);
         setDisplayableBalances(clientFormatted);
         setIsLoadingBalances(false);
     },0);
 
-
-  }, []); // Run once on mount
+  }, []);
 
   const getAssetIconDisplay = (icon: DisplayableUserAsset['icon'], name: string, symbol: string) => {
     const AssetIconComponent = icon && typeof icon !== 'string' ? icon : null;
     if (AssetIconComponent) {
-      return <AssetIconComponent className="h-8 w-8 mr-3 shrink-0" />;
+      return <AssetIconComponent className="h-8 w-8 shrink-0" />;
     }
     if (typeof icon === 'string') {
-      return <Image src={icon} alt={name} width={32} height={32} className="rounded-full mr-3 shrink-0" data-ai-hint={`${name} logo`} />;
+      return <Image src={icon} alt={name} width={32} height={32} className="rounded-full shrink-0" data-ai-hint={`${name} logo`} />;
     }
     if (['USD', 'EUR', 'GBP', 'JPY'].includes(symbol.toUpperCase())) {
-        return <DollarSign className="h-8 w-8 mr-3 shrink-0 text-muted-foreground" />;
+        return <DollarSign className="h-8 w-8 shrink-0 text-muted-foreground" />;
     }
-    // Fallback for crypto assets if no icon is provided
-    return <HelpCircle className="h-8 w-8 mr-3 shrink-0 text-muted-foreground" />;
+    return <HelpCircle className="h-8 w-8 shrink-0 text-muted-foreground" />;
   };
   
   const assetsToDisplay = isLoadingBalances && displayableBalances.length === 0 
-    ? mockWalletTransactions.reduce((acc, tx) => { // Basic SSR fallback if useEffect hasn't run
+    ? mockWalletTransactions.reduce((acc, tx) => { 
         if (!acc.find(a => a.symbol === tx.assetSymbol.toUpperCase())) {
           const isFiat = ['USD', 'EUR', 'GBP', 'JPY'].includes(tx.assetSymbol.toUpperCase());
-          const price = isFiat ? (MOCK_CONVERSION_RATES[tx.assetSymbol.toUpperCase()] || 0) : getAssetPriceInUSD(tx.assetSymbol);
           acc.push({
             symbol: tx.assetSymbol.toUpperCase(),
             name: tx.assetName,
             icon: tx.assetIcon,
-            balance: 0, // Actual balance calculation deferred
-            valueUSD: 0, // Actual value calculation deferred
+            balance: 0, 
+            valueUSD: 0, 
             isFiat: isFiat,
-            displayBalance: `0.00 ${tx.assetSymbol.toUpperCase()}`,
-            displayValueUSD: `$0.00`,
+            formattedBalance: `0.00`,
+            formattedValueUSD: `$0.00`,
           });
         }
         return acc;
@@ -246,25 +210,27 @@ export default function AssetsPage() {
             )}
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[200px] whitespace-nowrap">Asset</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Balance</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Approx. Value (USD)</TableHead>
+                <TableHead>Asset</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assetsToDisplay.map((asset) => (
                 <TableRow key={asset.symbol}>
                   <TableCell>
-                    <div className="flex items-center">
+                    <div className="flex items-center py-2">
                       {getAssetIconDisplay(asset.icon, asset.name, asset.symbol)}
-                      <div>
-                        <span className="font-medium">{asset.name}</span>
-                        <div className="text-xs text-muted-foreground">{asset.symbol}</div>
+                      <div className="ml-4 flex-grow">
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-medium text-base">{asset.symbol}.</span>
+                          <span className="font-mono text-base text-right">{asset.formattedBalance}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline mt-0.5">
+                          <span className="text-sm text-muted-foreground">{asset.name}</span>
+                          <span className="font-mono text-sm text-muted-foreground text-right">{asset.formattedValueUSD}</span>
+                        </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-mono">{asset.displayBalance}</TableCell>
-                  <TableCell className="text-right font-mono">{asset.displayValueUSD}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
