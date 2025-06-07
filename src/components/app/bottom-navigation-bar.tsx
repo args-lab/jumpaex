@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, ArrowLeftRight, User, WalletCards, Store } from 'lucide-react';
+import { Home, ArrowLeftRight, User, WalletCards, Store, Repeat } from 'lucide-react'; // Added Repeat for Convert
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,7 @@ export function BottomNavigationBar() {
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/market', label: 'Market', icon: Store },
-    { href: '/transactions', label: 'Trades', icon: ArrowLeftRight },
+    { href: '/convert', label: 'Convert', icon: Repeat }, // Changed from Trades to Convert
     { href: '/assets', label: 'Assets', icon: WalletCards },
     { href: '/account', label: 'Account', icon: User },
   ];
@@ -28,7 +28,7 @@ export function BottomNavigationBar() {
                 variant="ghost"
                 className={cn(
                   'flex flex-col items-center justify-center h-full w-full p-1 rounded-none',
-                  pathname === item.href ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  (pathname === item.href || (item.href === '/convert' && pathname.startsWith('/transactions'))) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
                 asChild
               >
