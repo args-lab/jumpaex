@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge'; // Added import
 import { ArrowLeft, ChevronRight, ShieldCheck, Info, RefreshCcw } from 'lucide-react';
 import type { P2POffer, Currency } from '@/types';
 import { mockCurrencies, depositableAssets } from '@/data/mock';
@@ -227,3 +228,4 @@ export function P2PTradeModal({
     </Dialog>
   );
 }
+
