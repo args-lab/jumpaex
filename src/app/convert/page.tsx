@@ -153,7 +153,6 @@ export default function ConvertPage() {
     const rate = MOCK_CONVERSION_RATES_PAIRS[fromAssetSymbol]?.[toAssetSymbol];
     if (rate) {
         // As per image: 1 ETH = 17,523.3 MOVE, and 1 MOVE = 0.00005701 ETH
-        // If currentRateString is "1 ETH = X MOVE", then for sheet we need inverse if toAsset is ETH
         // The main display rate is 1 FromAsset = X ToAsset
         // The sheet rate shows both: 1 ToAsset = Y FromAsset AND 1 FromAsset = X ToAsset
         // For the sheet "Rate" field, it seems to show "1 FROM_ASSET = X TO_ASSET" like the image "1 ETH = 17,523.3 MOVE"
@@ -276,17 +275,15 @@ export default function ConvertPage() {
               </p>
             </CardContent>
           </Card>
+          <Button
+            size="lg"
+            className="w-full mt-8 h-12 text-base bg-accent hover:bg-accent/90 text-accent-foreground"
+            onClick={handlePreviewConversion}
+            disabled={!fromAmount || parseFloat(fromAmount) <= 0 || !toAmount || parseFloat(toAmount) <= 0}
+          >
+            Convert
+          </Button>
         </div>
-
-        <Button
-          size="lg"
-          className="w-full max-w-md mx-auto mt-8 h-12 text-base bg-accent hover:bg-accent/90 text-accent-foreground"
-          onClick={handlePreviewConversion}
-          disabled={!fromAmount || parseFloat(fromAmount) <= 0 || !toAmount || parseFloat(toAmount) <= 0}
-        >
-          Convert
-        </Button>
-
       </main>
       <BottomNavigationBar />
       <ConfirmConvertSheet
