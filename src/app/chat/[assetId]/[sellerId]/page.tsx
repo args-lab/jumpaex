@@ -21,9 +21,9 @@ interface Message {
   timestamp?: Date;
   type?: 'order_created_banner' | 'seller_instructions' | 'welcome_banner' | 'new_messages_divider';
   orderId?: string;
-  fiatAmount?: string; // Storing as string from params
+  fiatAmount?: string; 
   fiatCurrency?: string;
-  payWithin?: string; // e.g., "13:53"
+  payWithin?: string; 
   detailedInstructions?: {
     title: string;
     items: string[];
@@ -42,7 +42,6 @@ interface ChatInitialData {
   sellerName?: string;
 }
 
-// Helper to format fiat currency
 const formatFiatDisplay = (value: number, currencyCode: string, locale: string | undefined): string => {
   if (isNaN(value) || !isFinite(value)) return `${mockCurrencies.find(c=>c.id.toUpperCase() === currencyCode.toUpperCase())?.symbol || currencyCode}0.00`;
   const targetCurrencyInfo = mockCurrencies.find(c => c.id.toUpperCase() === currencyCode.toUpperCase() || c.symbol.toUpperCase() === currencyCode.toUpperCase());
@@ -68,12 +67,16 @@ function ChatPageContent() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  
+  const [initialTradeData, setInitialTradeData] = useState<ChatInitialData | null>(null);
+  const [isInitialTradeDataLoaded, setIsInitialTradeDataLoaded] = useState(false);
+
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [seller, setSeller] = useState<MockSeller | null | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
-  const [initialTradeData, setInitialTradeData] = useState<ChatInitialData | null>(null);
+  const [isLoadingAssetSeller, setIsLoadingAssetSeller] = useState(true); 
+  
   const [locale, setLocale] = useState<string | undefined>(undefined);
-  const [payWithinTimer, setPayWithinTimer] = useState<string>("13:53"); // Mock timer from image
+  const [payWithinTimer, setPayWithinTimer] = useState<string>("13:53");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -82,7 +85,6 @@ function ChatPageContent() {
   }, []);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     if (scrollAreaRef.current) {
       const scrollViewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
       if (scrollViewport) {
@@ -91,114 +93,110 @@ function ChatPageContent() {
     }
   }, [messages]);
 
+  useEffect(() => { // Step 1: Load initialTradeData from searchParams
+    const tradeType = searchParams.get('tradeType') as 'buy' | 'sell' | undefined;
+    const cryptoAssetSymbol = searchParams.get('cryptoAssetSymbol') || undefined;
 
-  useEffect(() => {
-    const data: ChatInitialData = {
-      tradeType: searchParams.get('tradeType') as 'buy' | 'sell' | undefined,
-      fiatAmount: searchParams.get('fiatAmount') || undefined,
-      cryptoAmount: searchParams.get('cryptoAmount') || undefined,
-      fiatCurrency: searchParams.get('fiatCurrency') || undefined,
-      cryptoAssetSymbol: searchParams.get('cryptoAssetSymbol') || undefined,
-      pricePerCrypto: searchParams.get('pricePerCrypto') || undefined,
-      orderId: searchParams.get('orderId') || `xx${Math.floor(Math.random() * 9000) + 1000}`, // Keep random for mock
-      sellerName: searchParams.get('sellerName') || undefined, // Will be set by seller lookup
-    };
-    if (data.tradeType && data.cryptoAssetSymbol) {
-      setInitialTradeData(data);
+    if (tradeType && cryptoAssetSymbol) {
+      setInitialTradeData({
+        tradeType: tradeType,
+        fiatAmount: searchParams.get('fiatAmount') || undefined,
+        cryptoAmount: searchParams.get('cryptoAmount') || undefined,
+        fiatCurrency: searchParams.get('fiatCurrency') || undefined,
+        cryptoAssetSymbol: cryptoAssetSymbol,
+        pricePerCrypto: searchParams.get('pricePerCrypto') || undefined,
+        orderId: searchParams.get('orderId') || `xx${Math.floor(Math.random() * 9000) + 1000}`,
+        sellerName: searchParams.get('sellerName') || undefined,
+      });
+    } else {
+      setInitialTradeData(null); // Explicitly null if critical params are missing
+      console.error("ChatPage: Missing tradeType or cryptoAssetSymbol in searchParams.", Object.fromEntries(searchParams.entries()));
     }
+    setIsInitialTradeDataLoaded(true);
   }, [searchParams]);
 
-  useEffect(() => {
+  useEffect(() => { // Step 2: Load asset & seller, depends on initialTradeData being processed
+    if (!isInitialTradeDataLoaded) {
+      return; // Wait for initialTradeData to be processed
+    }
+
+    if (!initialTradeData) { // If initialTradeData itself is null (error case from step 1)
+        setAsset(null);
+        setSeller(null);
+        setIsLoadingAssetSeller(false);
+        return;
+    }
+
     if (assetId && sellerId) {
-      let foundAsset = mockAssets.find(a => a.id === assetId || a.name.toLowerCase() === assetId.toLowerCase());
+      let foundAsset = mockAssets.find(a => a.id.toLowerCase() === assetId.toLowerCase() || a.name.toLowerCase() === assetId.toLowerCase());
        if (!foundAsset) {
-          const depoAsset = depositableAssets.find(da => da.id === assetId || da.symbol === assetId);
+          const depoAsset = depositableAssets.find(da => da.id.toLowerCase() === assetId.toLowerCase() || da.symbol.toLowerCase() === assetId.toLowerCase());
           if (depoAsset) {
             foundAsset = {
-                id: depoAsset.id, name: depoAsset.name, price: 0, currency: initialTradeData?.fiatCurrency || 'USD', 
+                id: depoAsset.id, name: depoAsset.name, price: parseFloat(initialTradeData.pricePerCrypto || '0'), 
+                currency: initialTradeData.fiatCurrency || 'USD', 
                 region: 'global', network: depoAsset.supportedNetworks[0] || 'unknown', icon: depoAsset.icon,
                 volume: 0, change24h: 0, seller: '',
             };
           }
       }
-      const foundSeller = mockSellers.find(s => s.id === sellerId || `mockSeller_${s.name.replace(/\s+/g, '')}` === sellerId);
+      const foundSeller = mockSellers.find(s => s.id === sellerId || `mockSeller_${s.name.replace(/\s+/g, '').toLowerCase()}` === sellerId.toLowerCase());
       
       setAsset(foundAsset || null);
       setSeller(foundSeller || null);
-      if (foundSeller && initialTradeData && !initialTradeData.sellerName) {
+      
+      // If sellerName wasn't in query params but we found a seller, update initialTradeData
+      if (foundSeller && !initialTradeData.sellerName) {
         setInitialTradeData(prev => ({...prev!, sellerName: foundSeller.name}));
       }
-      setIsLoading(false);
-    }
-  }, [assetId, sellerId, initialTradeData]);
 
-  useEffect(() => {
-    if (isLoading || !initialTradeData || !asset || !seller) return;
+    } else {
+        setAsset(null);
+        setSeller(null);
+    }
+    setIsLoadingAssetSeller(false);
+  }, [assetId, sellerId, initialTradeData, isInitialTradeDataLoaded]);
+
+
+  useEffect(() => { // Step 3: Setup initial messages
+    if (isLoadingAssetSeller || !isInitialTradeDataLoaded || !initialTradeData || !asset || !seller) return;
 
     const newMessages: Message[] = [
+      { id: 'sys_welcome', type: 'welcome_banner', sender: 'system-banner', text: "Welcome to the new Chatroom. " },
+      { id: 'sys_divider', type: 'new_messages_divider', sender: 'system-banner', text: "New order messages" },
       {
-        id: 'sys_welcome',
-        type: 'welcome_banner',
-        sender: 'system-banner',
-        text: "Welcome to the new Chatroom. " // Tap to sync part handled in render
-      },
-      {
-        id: 'sys_divider',
-        type: 'new_messages_divider',
-        sender: 'system-banner',
-        text: "New order messages"
-      },
-      {
-        id: 'sys_order_created',
-        type: 'order_created_banner',
-        sender: 'system-banner',
-        orderId: initialTradeData.orderId,
-        fiatAmount: initialTradeData.fiatAmount, // Pass along for display if needed
-        fiatCurrency: initialTradeData.fiatCurrency, // Pass along
+        id: 'sys_order_created', type: 'order_created_banner', sender: 'system-banner',
+        orderId: initialTradeData.orderId, fiatAmount: initialTradeData.fiatAmount, fiatCurrency: initialTradeData.fiatCurrency,
         text: `Order (${initialTradeData.orderId}) created. Please complete the payment and mark the order as paid in time, or the order will be canceled.`,
       },
       {
-        id: 'seller_instr_1',
-        sender: 'other',
-        timestamp: new Date(),
-        type: 'seller_instructions',
+        id: 'seller_instr_1', sender: 'other', timestamp: new Date(), type: 'seller_instructions',
         detailedInstructions: {
-          title: "💥 NO THIRD PARTY 💥",
-          items: ["NO SINARMAS", "NO GOPAY", "NO SHOPEE PAY", "NO OVO", "NO FLIP"],
+          title: "💥 NO THIRD PARTY 💥", items: ["NO SINARMAS", "NO GOPAY", "NO SHOPEE PAY", "NO OVO", "NO FLIP"],
           note: "Nama pengirim wajib sama sesuai dengan yang tertera pada Binance."
         }
       }
     ];
     setMessages(newMessages);
-
-  }, [isLoading, initialTradeData, asset, seller, payWithinTimer]);
+  }, [isLoadingAssetSeller, isInitialTradeDataLoaded, initialTradeData, asset, seller, payWithinTimer]);
 
   const handleSendMessage = (e: FormEvent) => {
     e.preventDefault();
     if (newMessage.trim() === '') return;
     const message: Message = {
-      id: String(Date.now()),
-      text: newMessage,
-      sender: 'user',
-      timestamp: new Date(),
+      id: String(Date.now()), text: newMessage, sender: 'user', timestamp: new Date(),
     };
     setMessages(prev => [...prev, message]);
     setNewMessage('');
-    // Simulate a generic reply for testing
     setTimeout(() => {
       setMessages(prev => [
         ...prev,
-        {
-          id: String(Date.now() + 1),
-          text: "Seller received: " + message.text,
-          sender: 'other',
-          timestamp: new Date(),
-        },
+        { id: String(Date.now() + 1), text: "Seller received: " + message.text, sender: 'other', timestamp: new Date() },
       ]);
     }, 1000);
   };
-
-  if (isLoading) {
+  
+  if (!isInitialTradeDataLoaded || isLoadingAssetSeller) {
     return <div className="flex h-screen items-center justify-center bg-background">Loading chat...</div>;
   }
 
@@ -219,19 +217,18 @@ function ChatPageContent() {
     );
   }
   
-  const sellerAvatarInitial = seller.name ? seller.name.charAt(0).toUpperCase() : 'S';
+  const sellerAvatarInitial = (initialTradeData.sellerName || seller.name).charAt(0).toUpperCase();
   const fiatAmountNum = parseFloat(initialTradeData.fiatAmount || '0');
   const formattedFiat = formatFiatDisplay(fiatAmountNum, initialTradeData.fiatCurrency || 'USD', locale);
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Custom Chat Header */}
       <header className="sticky top-0 z-20 flex items-center justify-between p-3 border-b bg-background shadow-sm">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="text-sm bg-primary/20 text-primary">{sellerAvatarInitial}</AvatarFallback>
           </Avatar>
           <div>
@@ -247,8 +244,7 @@ function ChatPageContent() {
         </Button>
       </header>
 
-      {/* Order Information Bar */}
-      <div className="sticky top-[61px] z-10 flex items-center justify-between p-3 border-b bg-background shadow-sm">
+      <div className="sticky top-[60px] z-10 flex items-center justify-between p-3 border-b bg-background shadow-sm">
         <div>
           <p className="text-sm font-medium">
             {initialTradeData.tradeType === 'buy' ? 'Buy' : 'Sell'} {initialTradeData.cryptoAssetSymbol} with {formattedFiat}
@@ -260,9 +256,8 @@ function ChatPageContent() {
         </Button>
       </div>
 
-      {/* Messages Area */}
-      <ScrollArea ref={scrollAreaRef} className="flex-grow p-2 sm:p-4 bg-muted/20">
-        <div className="space-y-3">
+      <ScrollArea ref={scrollAreaRef} className="flex-grow p-4 bg-muted/20">
+        <div className="space-y-4">
           {messages.map(msg => {
             if (msg.type === 'welcome_banner') {
               return (
@@ -275,7 +270,7 @@ function ChatPageContent() {
               return (
                  <div key={msg.id} className="relative text-center my-4">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t"></span>
+                        <span className="w-full border-t border-border"></span>
                     </div>
                     <span className="relative bg-muted/20 px-2 text-xs text-muted-foreground">{msg.text}</span>
                 </div>
@@ -293,7 +288,7 @@ function ChatPageContent() {
               const { title, items, note } = msg.detailedInstructions;
               return (
                 <div key={msg.id} className="flex items-end space-x-2">
-                  <Avatar className="h-7 w-7 self-start">
+                  <Avatar className="h-7 w-7 self-start shrink-0">
                     <AvatarFallback className="text-xs bg-muted text-muted-foreground">{sellerAvatarInitial}</AvatarFallback>
                   </Avatar>
                   <div className="p-3 rounded-lg bg-card shadow-sm max-w-[80%]">
@@ -316,14 +311,13 @@ function ChatPageContent() {
                 </div>
               );
             }
-            // Regular text messages
             return (
               <div
                 key={msg.id}
                 className={`flex items-end space-x-2 ${msg.sender === 'user' ? 'justify-end' : ''}`}
               >
                 {msg.sender === 'other' && (
-                  <Avatar className="h-7 w-7 self-start">
+                  <Avatar className="h-7 w-7 self-start shrink-0">
                     <AvatarFallback className="text-xs bg-muted text-muted-foreground">{sellerAvatarInitial}</AvatarFallback>
                   </Avatar>
                 )}
@@ -334,13 +328,13 @@ function ChatPageContent() {
                 >
                   <p className="text-sm">{msg.text}</p>
                   {msg.timestamp && (
-                    <p className="text-xs text-muted-foreground/80 mt-1 text-right">
+                    <p className={cn("text-xs mt-1 text-right", msg.sender === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground/80')}>
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   )}
                 </div>
                 {msg.sender === 'user' && (
-                   <Avatar className="h-7 w-7 self-start">
+                   <Avatar className="h-7 w-7 self-start shrink-0">
                     <AvatarFallback className="text-xs bg-blue-500 text-white">U</AvatarFallback>
                   </Avatar>
                 )}
@@ -350,8 +344,7 @@ function ChatPageContent() {
         </div>
       </ScrollArea>
 
-      {/* Chat Input Footer */}
-      <footer className="sticky bottom-0 z-10 flex items-center p-2 sm:p-3 border-t bg-background space-x-2">
+      <footer className="sticky bottom-0 z-10 flex items-center p-3 border-t bg-background space-x-2">
         <Button variant="ghost" size="icon" className="h-9 w-9">
           <PlusCircle className="h-5 w-5 text-muted-foreground" />
         </Button>
@@ -382,3 +375,4 @@ export default function ChatPage() {
     
 
     
+
