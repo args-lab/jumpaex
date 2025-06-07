@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Header } from '@/components/app/header'; // Assuming a generic header, or create a specific one
@@ -50,6 +50,7 @@ const formatCryptoDisplay = (value: number, symbol: string, locale: string | und
 };
 
 interface OrderDetails {
+  orderId: string;
   fiatAmount: number;
   cryptoAmount: number;
   pricePerCrypto: number;
@@ -57,17 +58,18 @@ interface OrderDetails {
   cryptoAssetSymbol: string;
   sellerName: string;
   sellerAvatarInitial: string;
-  paymentMethod: string; // For simplicity, assume one payment method string
+  paymentMethod: string; 
   advertiserRequirements: string;
   assetId: string;
   sellerId: string;
   tradeType: 'buy' | 'sell';
-  cryptoAssetIcon?: string; // URL or path
+  cryptoAssetIcon?: string; 
 }
 
 function OrderCreatedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams(); // Not strictly needed for orderId if always in query, but good for robustness
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [locale, setLocale] = useState<string | undefined>(undefined);
 
@@ -76,39 +78,34 @@ function OrderCreatedContent() {
       setLocale(navigator.language);
     }
 
-    const params = Object.fromEntries(searchParams.entries());
-    if (params.fiatAmount && params.cryptoAssetSymbol) {
-      const cryptoAsset = depositableAssets.find(da => da.symbol === params.cryptoAssetSymbol);
+    const queryData = Object.fromEntries(searchParams.entries());
+    if (queryData.fiatAmount && queryData.cryptoAssetSymbol) {
+      const cryptoAsset = depositableAssets.find(da => da.symbol === queryData.cryptoAssetSymbol);
       let iconPath: string | undefined = undefined;
       if (cryptoAsset?.icon && typeof cryptoAsset.icon === 'string') {
         iconPath = cryptoAsset.icon;
-      } else if (cryptoAsset?.icon && typeof cryptoAsset.icon !== 'string') {
-        // This won't work directly for Lucide components as strings.
-        // For now, we'll skip if it's a component, or find a way to serialize component name.
-        // Or, rely on cryptoAssetSymbol to re-fetch icon on display page.
       }
-
-
+      
       setOrderDetails({
-        fiatAmount: parseFloat(params.fiatAmount),
-        cryptoAmount: parseFloat(params.cryptoAmount),
-        pricePerCrypto: parseFloat(params.pricePerCrypto),
-        fiatCurrency: params.fiatCurrency,
-        cryptoAssetSymbol: params.cryptoAssetSymbol,
-        sellerName: params.sellerName,
-        sellerAvatarInitial: params.sellerAvatarInitial,
-        paymentMethod: params.paymentMethod || 'Not specified',
-        advertiserRequirements: params.advertiserRequirements || 'No specific terms.',
-        assetId: params.assetId,
-        sellerId: params.sellerId,
-        tradeType: params.tradeType as 'buy' | 'sell',
+        orderId: queryData.orderId || `err_ord_${Date.now()}`, // Get orderId from query
+        fiatAmount: parseFloat(queryData.fiatAmount),
+        cryptoAmount: parseFloat(queryData.cryptoAmount),
+        pricePerCrypto: parseFloat(queryData.pricePerCrypto),
+        fiatCurrency: queryData.fiatCurrency,
+        cryptoAssetSymbol: queryData.cryptoAssetSymbol,
+        sellerName: queryData.sellerName,
+        sellerAvatarInitial: queryData.sellerAvatarInitial,
+        paymentMethod: queryData.paymentMethod || 'Not specified',
+        advertiserRequirements: queryData.advertiserRequirements || 'No specific terms.',
+        assetId: queryData.assetId,
+        sellerId: queryData.sellerId,
+        tradeType: queryData.tradeType as 'buy' | 'sell',
         cryptoAssetIcon: iconPath,
       });
     } else {
-      // Handle missing params, maybe redirect or show error
       // router.push('/market'); 
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, params]);
 
   if (!orderDetails) {
     return (
@@ -120,10 +117,20 @@ function OrderCreatedContent() {
   
   const CryptoAssetSelfIcon = depositableAssets.find(da => da.symbol === orderDetails.cryptoAssetSymbol)?.icon;
 
+  const chatLinkHref = `/chat/${orderDetails.assetId}/${orderDetails.sellerId}?` +
+  `tradeType=${orderDetails.tradeType}` +
+  `&fiatAmount=${orderDetails.fiatAmount}` +
+  `&cryptoAmount=${orderDetails.cryptoAmount}` +
+  `&fiatCurrency=${orderDetails.fiatCurrency}` +
+  `&cryptoAssetSymbol=${orderDetails.cryptoAssetSymbol}` +
+  `&pricePerCrypto=${orderDetails.pricePerCrypto}` +
+  `&orderId=${orderDetails.orderId}` + // Pass orderId
+  `&sellerName=${encodeURIComponent(orderDetails.sellerName)}` +
+  `&sellerAvatarInitial=${encodeURIComponent(orderDetails.sellerAvatarInitial)}`;
+
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/30">
-      {/* Simplified Header for this page */}
       <header className="sticky top-0 z-40 w-full border-b bg-background">
         <div className="container flex h-14 items-center justify-between">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -158,7 +165,7 @@ function OrderCreatedContent() {
               </div>
             </div>
             <Button size="sm" className="bg-yellow-400 hover:bg-yellow-500 text-black text-xs h-7 px-3 relative" asChild>
-              <Link href={`/chat/${orderDetails.assetId}/${orderDetails.sellerId}?tradeType=${orderDetails.tradeType}&fiatAmount=${orderDetails.fiatAmount}&cryptoAmount=${orderDetails.cryptoAmount}&fiatCurrency=${orderDetails.fiatCurrency}&cryptoAssetSymbol=${orderDetails.cryptoAssetSymbol}&pricePerCrypto=${orderDetails.pricePerCrypto}`}>
+              <Link href={chatLinkHref}>
                 <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
                 Chat
                 <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
@@ -196,6 +203,10 @@ function OrderCreatedContent() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Receive Quantity</span>
                   <span>{formatCryptoDisplay(orderDetails.cryptoAmount, orderDetails.cryptoAssetSymbol, locale)}</span>
+                </div>
+                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">Order ID</span>
+                  <span className="font-mono text-xs">{orderDetails.orderId}</span>
                 </div>
               </div>
             </AccordionContent>
@@ -237,5 +248,3 @@ export default function OrderCreatedPage() {
     </Suspense>
   );
 }
-
-    
