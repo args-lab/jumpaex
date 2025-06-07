@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, MoreHorizontal, PlusCircle, SendHorizonal, ShieldCheck, Ban } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, MoreHorizontal, PlusCircle, SendHorizonal, ShieldCheck, Ban, AlertTriangle } from 'lucide-react';
 import type { Asset, MockSeller } from '@/types';
 import { mockAssets, mockSellers, depositableAssets, mockCurrencies } from '@/data/mock';
 import { cn } from '@/lib/utils';
@@ -198,16 +199,22 @@ function ChatPageContent() {
   };
 
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">Loading chat...</div>;
+    return <div className="flex h-screen items-center justify-center bg-background">Loading chat...</div>;
   }
 
   if (!asset || !seller || !initialTradeData) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center p-4">
-         <Button variant="outline" className="mb-4 self-start" onClick={() => router.back()}>
+      <div className="flex flex-col min-h-screen items-center justify-center p-4 bg-background">
+         <Button variant="outline" className="mb-6 self-start sm:self-center" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
-        <p className="text-destructive">Chat data could not be loaded. Asset, seller, or trade details are missing.</p>
+        <Alert variant="destructive" className="w-full max-w-md">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error Loading Chat</AlertTitle>
+          <AlertDescription>
+            Chat data could not be loaded. Asset, seller, or trade details might be missing or invalid. Please try navigating back and selecting a trade again.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -367,7 +374,7 @@ function ChatPageContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading chat interface...</div>}>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-background">Loading chat interface...</div>}>
       <ChatPageContent />
     </Suspense>
   )
