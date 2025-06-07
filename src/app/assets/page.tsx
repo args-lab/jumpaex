@@ -3,109 +3,154 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableCaption,
-} from '@/components/ui/table';
-import { mockWalletTransactions, mockAssets } from '@/data/mock';
-import type { WalletTransaction } from '@/types';
-import { DollarSign, HelpCircle } from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { mockWalletTransactions, mockAssets, mockCurrencies, depositableAssets, MOCK_CONVERSION_RATES as mockConversionRates } from '@/data/mock';
+import type { WalletTransaction, Asset as MockAssetType } from '@/types';
+import { Eye, ChevronDown, Coins, Search, SlidersHorizontal, DollarSign, HelpCircle, Bitcoin, Landmark, Waves, Replace, CircleDollarSign as UsdtIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-// Mock conversion rates (can be fetched from an API in a real app)
-const MOCK_CONVERSION_RATES: Record<string, number> = {
-  USD: 1,
-  USDT: 1, // Assuming 1 USDT = 1 USD for simplicity
-  EUR: 1.08, // Example: 1 EUR = 1.08 USD
-  GBP: 1.25, // Example: 1 GBP = 1.25 USD
-};
-
-const getAssetPriceInUSD = (assetSymbol: string): number => {
-  const upperSymbol = assetSymbol.toUpperCase();
-  if (MOCK_CONVERSION_RATES[upperSymbol]) {
-    return MOCK_CONVERSION_RATES[upperSymbol];
-  }
-  const assetInfo = mockAssets.find(a => a.name.toUpperCase().startsWith(upperSymbol) || a.name.toUpperCase() === upperSymbol);
-  if (assetInfo) {
-    return assetInfo.currency.toUpperCase() === 'USDT' ? assetInfo.price * MOCK_CONVERSION_RATES['USDT'] : assetInfo.price;
-  }
-  const walletAsset = mockWalletTransactions.find(tx => tx.assetSymbol.toUpperCase() === upperSymbol);
-  if (walletAsset && !['USD', 'EUR', 'GBP', 'JPY'].includes(upperSymbol)) {
-     const foundByName = mockAssets.find(a => a.name === walletAsset.assetName);
-     if (foundByName) {
-       return foundByName.currency.toUpperCase() === 'USDT' ? foundByName.price * MOCK_CONVERSION_RATES['USDT'] : foundByName.price;
-     }
-     console.warn(`Price for ${assetSymbol} not found in mockAssets, defaulting to 0 for USD value calculation.`);
-     return 0;
-  }
-  return 0; 
-};
-
-const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
-  const fiatSymbols = ['USD', 'EUR', 'GBP', 'JPY']; 
-  if (fiatSymbols.includes(assetSymbol.toUpperCase())) {
-    return 2;
-  }
-  return amount !== 0 && Math.abs(amount) < 0.000001 ? 8 : (Math.abs(amount) < 1 ? 6 : 4);
-};
-
-// Helper function to format crypto numeric part client-side
-const formatCryptoNumericString = (amount: number, assetSymbol: string, locale: string | undefined) => {
-  const minMaxDigits = getWalletAmountMinMaxDigits(amount, assetSymbol);
-  return amount.toLocaleString(locale, {
-    minimumFractionDigits: minMaxDigits,
-    maximumFractionDigits: minMaxDigits,
-  });
-};
-
-// Helper to format currency values (USD)
-const formatCurrencyValue = (value: number, locale: string | undefined) => {
-  return value.toLocaleString(locale, {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
-
+// Extended interface for displayable assets
 interface DisplayableUserAsset {
   symbol: string;
   name: string;
   icon?: LucideIcon | string;
   balance: number;
   valueUSD: number;
+  averageCostUSD?: number;
+  pnlTotalUSD?: number;
+  pnlPercentage?: number;
   isFiat: boolean;
-  formattedBalance: string; // Just the number e.g. "0.1000"
-  formattedValueUSD: string; // Full currency string e.g. "$300.00"
+
+  // Client-side formatted strings
+  formattedBalance: string;
+  formattedValueUSD: string;
+  formattedAverageCostUSD?: string;
+  formattedPnl?: string;
 }
 
+// Helper to get asset price in USD, more robust
+const getAssetPriceInUSD = (assetSymbol: string): number => {
+  const upperSymbol = assetSymbol.toUpperCase();
+  if (mockConversionRates[upperSymbol]) { // Check direct fiat conversion first
+    return mockConversionRates[upperSymbol];
+  }
+  // Find in mockAssets (for crypto like BTC, ETH from P2P listings)
+  const assetInfo = mockAssets.find(a => a.name.toUpperCase().startsWith(upperSymbol) || a.name.toUpperCase() === upperSymbol || a.id.toUpperCase() === upperSymbol);
+  if (assetInfo) {
+    const assetCurrencyUpper = assetInfo.currency.toUpperCase();
+    if (assetCurrencyUpper === 'USD') return assetInfo.price;
+    if (mockConversionRates[assetCurrencyUpper]) {
+      return assetInfo.price * mockConversionRates[assetCurrencyUpper];
+    }
+    // Default to 1:1 if currency is USDT and USDT is 1 USD
+    if (assetCurrencyUpper === 'USDT' && mockConversionRates['USDT'] === 1) {
+        return assetInfo.price;
+    }
+  }
+  // Find in depositableAssets (for icons and basic info if not in mockAssets)
+  const depositableAssetInfo = depositableAssets.find(da => da.symbol.toUpperCase() === upperSymbol);
+  if (depositableAssetInfo) {
+    // This is tricky as depositableAssets don't have prices.
+    // We'll rely on mockAssets or a default if not found.
+    // For common ones not in mockAssets:
+    if (upperSymbol === 'USDT') return mockConversionRates['USDT'] || 1;
+  }
+
+  // Fallback for assets not in mockAssets or common ones, like MOVE, SEI, BTTC
+  // These will have mocked prices for display purposes if needed.
+  // For calculation, if price is unknown, it should be handled as 0.
+  // console.warn(`Price for ${assetSymbol} not found, defaulting to 0 for USD value calculation.`);
+  return 0;
+};
+
+
+const getWalletAmountMinMaxDigits = (amount: number, assetSymbol: string) => {
+  const fiatSymbols = ['USD', 'EUR', 'GBP', 'JPY'];
+  if (fiatSymbols.includes(assetSymbol.toUpperCase())) return 2;
+  if (amount === 0) return 2; // Show 0.00 for zero crypto balance
+  if (Math.abs(amount) < 0.00000001) return 8; // Very small amounts
+  if (Math.abs(amount) < 0.0001) return 6;
+  return 4;
+};
+
+const formatBalanceDisplay = (amount: number, assetSymbol: string, locale: string | undefined) => {
+  const digits = getWalletAmountMinMaxDigits(amount, assetSymbol);
+  return amount.toLocaleString(locale, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+};
+
+const formatFiatValue = (value: number, currencyCode: string = 'USD', locale: string | undefined, options?: Intl.NumberFormatOptions) => {
+  const defaultOptions: Intl.NumberFormatOptions = {
+    style: 'currency',
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    ...options,
+  };
+  try {
+    return value.toLocaleString(locale, defaultOptions);
+  } catch (e) { // Fallback for unknown currency codes
+    const symbol = mockCurrencies.find(c => c.id.toUpperCase() === currencyCode.toUpperCase())?.symbol || currencyCode;
+    return `${symbol}${value.toLocaleString(locale, { minimumFractionDigits: defaultOptions.minimumFractionDigits, maximumFractionDigits: defaultOptions.maximumFractionDigits })}`;
+  }
+};
+
+const getIconForSymbol = (symbol: string): LucideIcon | string | undefined => {
+    const upperSymbol = symbol.toUpperCase();
+    const asset = depositableAssets.find(da => da.symbol.toUpperCase() === upperSymbol) || mockAssets.find(ma => ma.name.toUpperCase() === upperSymbol || ma.id.toUpperCase() === upperSymbol);
+    if (asset?.icon) return asset.icon;
+    
+    // Fallback for image example specific icons not in current mock data
+    if (upperSymbol === 'MOVE') return 'https://placehold.co/32x32.png'; // Placeholder
+    if (upperSymbol === 'SEI') return 'https://placehold.co/32x32.png'; // Placeholder
+    if (upperSymbol === 'BTTC') return 'https://placehold.co/32x32.png'; // Placeholder
+    if (['USD', 'EUR', 'GBP', 'JPY'].includes(upperSymbol)) return DollarSign;
+    return HelpCircle;
+};
+
+
 export default function AssetsPage() {
-  const [displayableBalances, setDisplayableBalances] = useState<DisplayableUserAsset[]>([]);
-  const [isLoadingBalances, setIsLoadingBalances] = useState(true);
+  const [userAssets, setUserAssets] = useState<DisplayableUserAsset[]>([]);
+  const [totalPortfolioValueUSD, setTotalPortfolioValueUSD] = useState<number>(0);
+  const [totalPnlTodayUSD, setTotalPnlTodayUSD] = useState<number>(0); // Mocked
+  const [totalPnlTodayPercentage, setTotalPnlTodayPercentage] = useState<number>(0); // Mocked
+  const [selectedDisplayCurrency, setSelectedDisplayCurrency] = useState('USD'); // For total balance
+  const [locale, setLocale] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+
 
   useEffect(() => {
-    setIsLoadingBalances(true);
-    const calculatedAssetBalances: Record<string, { 
-      totalAmount: number; 
-      name: string; 
-      icon?: LucideIcon | string; 
+    if (typeof window !== 'undefined') {
+      setLocale(navigator.language);
+    }
+    setIsLoading(true);
+
+    const calculatedAssetBalances: Record<string, {
+      totalAmount: number;
+      name: string;
       isFiat: boolean;
     }> = {};
 
     mockWalletTransactions.forEach(tx => {
       const symbolUpper = tx.assetSymbol.toUpperCase();
       if (!calculatedAssetBalances[symbolUpper]) {
-        calculatedAssetBalances[symbolUpper] = { 
-          totalAmount: 0, 
-          name: tx.assetName, 
-          icon: tx.assetIcon,
+        calculatedAssetBalances[symbolUpper] = {
+          totalAmount: 0,
+          name: tx.assetName,
           isFiat: ['USD', 'EUR', 'GBP', 'JPY'].includes(symbolUpper),
         };
       }
@@ -117,125 +162,200 @@ export default function AssetsPage() {
         }
       }
     });
-
-    const locale = typeof window !== 'undefined' ? navigator.language : undefined;
-
-    const processAndFormat = (data: typeof calculatedAssetBalances) => {
-        return Object.entries(data)
-            .map(([symbol, assetData]) => {
-                if (assetData.totalAmount === 0 && !assetData.isFiat) return null;
-                const priceInUSD = assetData.isFiat ? MOCK_CONVERSION_RATES[symbol] || 0 : getAssetPriceInUSD(symbol);
-                const valueUSD = assetData.totalAmount * priceInUSD;
-                return {
-                    symbol: symbol,
-                    name: assetData.name,
-                    icon: assetData.icon,
-                    balance: assetData.totalAmount,
-                    valueUSD: valueUSD,
-                    isFiat: assetData.isFiat,
-                    formattedBalance: formatCryptoNumericString(assetData.totalAmount, symbol, locale),
-                    formattedValueUSD: formatCurrencyValue(valueUSD, locale),
-                };
-            })
-            .filter(Boolean) as DisplayableUserAsset[];
-    };
     
-    const initialFormatted = processAndFormat(calculatedAssetBalances).map(asset => ({
-        ...asset,
-        formattedBalance: asset.balance.toFixed(getWalletAmountMinMaxDigits(asset.balance, asset.symbol)),
-        formattedValueUSD: `$${asset.valueUSD.toFixed(2)}` // Simple USD for SSR
-    }));
-
-    if (displayableBalances.length === 0 && isLoadingBalances) {
-       setDisplayableBalances(initialFormatted);
-    }
-    
-    setTimeout(() => {
-        const clientFormatted = processAndFormat(calculatedAssetBalances);
-        setDisplayableBalances(clientFormatted);
-        setIsLoadingBalances(false);
-    },0);
-
-  }, []);
-
-  const getAssetIconDisplay = (icon: DisplayableUserAsset['icon'], name: string, symbol: string) => {
-    const AssetIconComponent = icon && typeof icon !== 'string' ? icon : null;
-    if (AssetIconComponent) {
-      return <AssetIconComponent className="h-8 w-8 shrink-0" />;
-    }
-    if (typeof icon === 'string') {
-      return <Image src={icon} alt={name} width={32} height={32} className="rounded-full shrink-0" data-ai-hint={`${name} logo`} />;
-    }
-    if (['USD', 'EUR', 'GBP', 'JPY'].includes(symbol.toUpperCase())) {
-        return <DollarSign className="h-8 w-8 shrink-0 text-muted-foreground" />;
-    }
-    return <HelpCircle className="h-8 w-8 shrink-0 text-muted-foreground" />;
-  };
-  
-  const assetsToDisplay = isLoadingBalances && displayableBalances.length === 0 
-    ? mockWalletTransactions.reduce((acc, tx) => { 
-        if (!acc.find(a => a.symbol === tx.assetSymbol.toUpperCase())) {
-          const isFiat = ['USD', 'EUR', 'GBP', 'JPY'].includes(tx.assetSymbol.toUpperCase());
-          acc.push({
-            symbol: tx.assetSymbol.toUpperCase(),
-            name: tx.assetName,
-            icon: tx.assetIcon,
-            balance: 0, 
-            valueUSD: 0, 
-            isFiat: isFiat,
-            formattedBalance: `0.00`,
-            formattedValueUSD: `$0.00`,
-          });
+    // Add assets from image not in transactions, with mock data
+    const imageAssets = ['ETH', 'MOVE', 'SEI', 'USDT', 'BNB', 'BTTC'];
+    imageAssets.forEach(imgSymbol => {
+        const upperImgSymbol = imgSymbol.toUpperCase();
+        if (!calculatedAssetBalances[upperImgSymbol]) {
+            const da = depositableAssets.find(d => d.symbol.toUpperCase() === upperImgSymbol);
+            calculatedAssetBalances[upperImgSymbol] = {
+                totalAmount: 0, // Will be mocked
+                name: da?.name || upperImgSymbol,
+                isFiat: false,
+            };
         }
-        return acc;
-      }, [] as DisplayableUserAsset[])
-    : displayableBalances;
+    });
 
+
+    let runningTotalPortfolioValueUSD = 0;
+
+    const formattedAssets = Object.entries(calculatedAssetBalances)
+      .map(([symbol, assetData]) => {
+        const priceInUSD = getAssetPriceInUSD(symbol) || (symbol === 'USDT' ? 1 : 0); // Ensure USDT has a price
+        
+        // Mock specific balances from image for better visual match
+        let currentBalance = assetData.totalAmount;
+        let mockAvgCost = priceInUSD * (1 - (Math.random() * 0.1 - 0.05)); // +/- 5% of current price
+        let mockPnlPerc = (Math.random() * 10 - 5); // +/- 5%
+
+        if (symbol === 'ETH') { currentBalance = 0.00006193; mockAvgCost = 2199.77; mockPnlPerc = 1.92;}
+        else if (symbol === 'MOVE') { currentBalance = 0.0784; mockAvgCost = 0.46347305 / 0.0784 ; mockPnlPerc = 4.97;} // Approx from image
+        else if (symbol === 'SEI') { currentBalance = 0.01415186; mockAvgCost = 0.22215441 / 0.01415186; mockPnlPerc = 3.97;} // Approx
+        else if (symbol === 'USDT') { currentBalance = 0.0003138; mockAvgCost = 1; mockPnlPerc = 0.00; }
+        else if (symbol === 'BNB') { currentBalance = 0.00000019; mockAvgCost = 367.27 / (0.00000019 * (getAssetPriceInUSD('BNB') || 580) / (getAssetPriceInUSD('BNB') || 580)); mockPnlPerc = 1.48; } // Complicated example from image, simplified
+        else if (symbol === 'BTTC') { currentBalance = 0.50; mockAvgCost = 0.00000149 / 0.50; mockPnlPerc = 1.47; }
+
+
+        const valueUSD = currentBalance * priceInUSD;
+        runningTotalPortfolioValueUSD += valueUSD;
+        const pnlTotalUSD = valueUSD * (mockPnlPerc / 100);
+
+        return {
+          symbol: symbol,
+          name: assetData.name,
+          icon: getIconForSymbol(symbol),
+          balance: currentBalance,
+          valueUSD: valueUSD,
+          averageCostUSD: mockAvgCost,
+          pnlTotalUSD: pnlTotalUSD,
+          pnlPercentage: mockPnlPerc,
+          isFiat: assetData.isFiat,
+          formattedBalance: formatBalanceDisplay(currentBalance, symbol, locale),
+          formattedValueUSD: formatFiatValue(valueUSD, 'USD', locale, {minimumFractionDigits: valueUSD < 0.01 ? 8:2}),
+          formattedAverageCostUSD: mockAvgCost ? formatFiatValue(mockAvgCost, 'USD', locale) : '-',
+          formattedPnl: `${pnlTotalUSD >= 0 ? '+' : ''}${formatFiatValue(pnlTotalUSD, 'USD', locale, {minimumFractionDigits:0, maximumFractionDigits:0})} (${pnlTotalUSD >= 0 ? '+' : ''}${mockPnlPerc.toFixed(2)}%)`,
+        };
+      })
+      .filter(asset => asset.balance > 0 || asset.isFiat || imageAssets.includes(asset.symbol)) // Keep if has balance, is fiat, or in image list
+      .sort((a, b) => b.valueUSD - a.valueUSD); // Sort by value
+      
+    setUserAssets(formattedAssets);
+    setTotalPortfolioValueUSD(runningTotalPortfolioValueUSD);
+    // Mock total PNL based on portfolio value
+    const mockTotalPnlPercentage = 2.12; // from image
+    setTotalPnlTodayPercentage(mockTotalPnlPercentage);
+    setTotalPnlTodayUSD(runningTotalPortfolioValueUSD * (mockTotalPnlPercentage / 100));
+    setIsLoading(false);
+
+  }, [locale]);
+
+
+  const displayTotalPortfolioValue = useMemo(() => {
+    const rate = mockConversionRates[selectedDisplayCurrency.toUpperCase()] || 1;
+    const valueInSelectedCurrency = totalPortfolioValueUSD / rate;
+    return formatFiatValue(valueInSelectedCurrency, selectedDisplayCurrency, locale, {minimumFractionDigits: selectedDisplayCurrency === 'USD' ? 2 : 2, maximumFractionDigits: 8});
+  }, [totalPortfolioValueUSD, selectedDisplayCurrency, locale]);
+
+  const displayTotalPnl = useMemo(() => {
+    const rate = mockConversionRates[selectedDisplayCurrency.toUpperCase()] || 1;
+    const pnlInSelectedCurrency = totalPnlTodayUSD / rate;
+    const pnlPrefix = totalPnlTodayUSD >= 0 ? '+' : '';
+    return `${pnlPrefix}${formatFiatValue(pnlInSelectedCurrency, selectedDisplayCurrency, locale, {minimumFractionDigits:2, maximumFractionDigits:2})} (${pnlPrefix}${totalPnlTodayPercentage.toFixed(2)}%)`;
+  }, [totalPnlTodayUSD, totalPnlTodayPercentage, selectedDisplayCurrency, locale]);
+
+
+  if (isLoading && userAssets.length === 0) {
+    return (
+        <div className="flex flex-col min-h-screen bg-background">
+            <Header />
+            <main className="flex-grow container mx-auto px-4 pt-8 pb-24 flex items-center justify-center">
+                <p>Loading assets...</p>
+            </main>
+            <BottomNavigationBar />
+        </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-grow container mx-auto px-2 sm:px-4 pt-8 pb-24">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-headline font-bold mb-2">My Assets</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Overview of your current asset balances.</p>
+      <main className="flex-grow container mx-auto px-4 pt-6 pb-24">
+        {/* Total Balance Section */}
+        <div className="mb-4">
+          <div className="flex items-center text-sm text-muted-foreground mb-1">
+            Total Balance <Eye className="ml-2 h-4 w-4" />
+          </div>
+          <div className="flex items-center">
+            <h1 className="text-3xl font-bold mr-2">{displayTotalPortfolioValue}</h1>
+            <Select value={selectedDisplayCurrency} onValueChange={setSelectedDisplayCurrency}>
+              <SelectTrigger className="w-auto h-8 text-lg font-bold border-none shadow-none focus:ring-0 !px-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {mockCurrencies.filter(c => c.id ==='usd' || c.id === 'eur' || c.id === 'gbp').map(currency => (
+                  <SelectItem key={currency.id} value={currency.id.toUpperCase()}>{currency.id.toUpperCase()}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className={cn("text-sm", totalPnlTodayUSD >= 0 ? "text-green-600" : "text-red-600")}>
+            Today's PNL {displayTotalPnl} &gt;
+          </div>
         </div>
 
-        <div className="rounded-lg border shadow-sm bg-card overflow-x-auto">
-          <Table>
-            {(isLoadingBalances || assetsToDisplay.length === 0) && (
-              <TableCaption>
-                {isLoadingBalances ? 'Loading your asset balances...' : 'No assets to display. Deposit funds to get started.'}
-              </TableCaption>
-            )}
-            <TableHeader>
-              <TableRow>
-                <TableHead>Asset</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {assetsToDisplay.map((asset) => (
-                <TableRow key={asset.symbol}>
-                  <TableCell>
-                    <div className="flex items-center py-2">
-                      {getAssetIconDisplay(asset.icon, asset.name, asset.symbol)}
-                      <div className="ml-4 flex-grow">
-                        <div className="flex justify-between items-baseline">
-                          <span className="font-medium text-base">{asset.symbol}.</span>
-                          <span className="font-mono text-base text-right">{asset.formattedBalance}</span>
-                        </div>
-                        <div className="flex justify-between items-baseline mt-0.5">
-                          <span className="text-sm text-muted-foreground">{asset.name}</span>
-                          <span className="font-mono text-sm text-muted-foreground text-right">{asset.formattedValueUSD}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <Button className="bg-accent hover:bg-accent/90 text-accent-foreground h-11" asChild>
+            <Link href="/wallet">Add Funds</Link>
+          </Button>
+          <Button variant="outline" className="h-11 text-muted-foreground border-input bg-card hover:bg-muted/50">Send</Button>
+          <Button variant="outline" className="h-11 text-muted-foreground border-input bg-card hover:bg-muted/50">Transfer</Button>
         </div>
+
+        {/* Convert Low-Value Assets */}
+        <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:bg-muted/20 px-2 py-3 mb-6">
+          <Coins className="mr-2 h-5 w-5 text-yellow-500" />
+          Convert Low-Value Assets to BNB
+        </Button>
+
+        <Separator className="mb-4"/>
+
+        {/* Balances Header */}
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-xl font-semibold">Balances</h2>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+              <Search className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+              <SlidersHorizontal className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Asset List */}
+        <div className="space-y-1">
+          {userAssets.map((asset) => (
+            <div key={asset.symbol} className="flex items-center py-3 px-1 hover:bg-muted/10 rounded-md">
+              <div className="flex items-center flex-shrink-0 mr-3">
+                {asset.icon && typeof asset.icon !== 'string' && <asset.icon className="h-8 w-8" />}
+                {asset.icon && typeof asset.icon === 'string' && <Image src={asset.icon} alt={asset.name} width={32} height={32} className="rounded-full" data-ai-hint={`${asset.name} logo`} />}
+                {!asset.icon && <HelpCircle className="h-8 w-8 text-muted-foreground" />}
+              </div>
+              <div className="flex-grow min-w-0">
+                <div className="flex justify-between items-baseline">
+                    <span className="font-medium text-base truncate">{asset.symbol}</span>
+                    <span className="font-mono text-base text-right">{asset.formattedBalance}</span>
+                </div>
+                <div className="flex justify-between items-baseline text-xs text-muted-foreground">
+                    <span className="truncate">{asset.name}</span>
+                    <span className="font-mono text-right">{asset.formattedValueUSD}</span>
+                </div>
+                {asset.averageCostUSD !== undefined && (
+                    <div className="flex justify-between items-baseline text-xs mt-0.5">
+                        <span className="text-muted-foreground">Average cost</span>
+                        <span className="font-mono text-muted-foreground text-right">{asset.formattedAverageCostUSD}</span>
+                    </div>
+                )}
+                {asset.pnlPercentage !== undefined && (
+                     <div className="flex justify-between items-baseline text-xs">
+                        <span className="text-muted-foreground">Today's PNL</span>
+                        <span className={cn("font-mono text-right", (asset.pnlTotalUSD || 0) >= 0 ? "text-green-600" : "text-red-600")}>
+                            {asset.formattedPnl}
+                        </span>
+                    </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {userAssets.length === 0 && !isLoading && (
+            <div className="py-10 text-center text-muted-foreground">
+                No assets to display. Deposit funds to get started.
+            </div>
+        )}
+
       </main>
       <BottomNavigationBar />
     </div>

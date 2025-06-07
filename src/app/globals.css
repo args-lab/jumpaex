@@ -5,95 +5,101 @@
 
 @layer base {
   :root {
-    --background: 270 17% 98%; /* Very Light Off-White/Lavender Tint */
-    --foreground: 0 0% 3.9%; /* Dark Gray for text */
+    --background: 0 0% 96%; /* Light gray (#F5F5F5) */
+    --foreground: 0 0% 3.9%; 
 
-    --card: 0 0% 100%; /* White */
+    --card: 0 0% 100%; 
     --card-foreground: 0 0% 3.9%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
 
-    --primary: 260 60% 50%; /* PancakeSwap Purple */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 196 78% 52%; /* Vibrant blue (#29ABE2) */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 10% 94%; /* Light Gray, slightly warm */
+    --secondary: 270 10% 94%; 
     --secondary-foreground: 0 0% 9%;
 
-    --muted: 270 10% 90%; /* Muted Gray, slightly warm */
+    --muted: 270 10% 90%; 
     --muted-foreground: 0 0% 45.1%;
 
-    --accent: 184 80% 42%; /* PancakeSwap Teal */
-    --accent-foreground: 0 0% 3.9%; /* Dark text on Teal */
+    --accent: 45 100% 70%; /* Yellow (#FFDA63) */
+    --accent-foreground: 0 0% 3.9%; /* Dark text on Yellow */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 270 10% 88%; /* Subtle Border */
+    --border: 270 10% 88%; 
     --input: 270 10% 88%;
-    --ring: 260 60% 50%; /* PancakeSwap Purple for rings */
+    --ring: 196 78% 52%; /* Vibrant blue for rings */
 
-    --chart-1: 260 60% 50%; /* Primary - Purple */
-    --chart-2: 184 80% 42%; /* Accent - Teal */
-    --chart-3: 260 50% 35%; /* Darker Purple */
-    --chart-4: 39 100% 61%; /* Yellow/Orange Accent */
-    --chart-5: 184 70% 55%; /* Lighter Teal */
+    --chart-1: 196 78% 52%; /* Primary - Vibrant Blue */
+    --chart-2: 45 100% 70%; /* Accent - Yellow */
+    --chart-3: 196 60% 35%; /* Darker Blue */
+    --chart-4: 39 100% 55%; /* Orange accent */
+    --chart-5: 196 70% 65%; /* Lighter Blue */
 
     --radius: 0.5rem;
 
     --sidebar-background: 270 15% 95%;
     --sidebar-foreground: 0 0% 3.9%;
-    --sidebar-primary: 260 60% 50%;
+    --sidebar-primary: 196 78% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 184 80% 42%;
+    --sidebar-accent: 45 100% 70%;
     --sidebar-accent-foreground: 0 0% 3.9%;
     --sidebar-border: 270 10% 85%;
-    --sidebar-ring: 260 60% 50%;
+    --sidebar-ring: 196 78% 52%;
   }
 
   .dark {
-    --background: 250 5% 16%; /* PancakeSwap Dark Background */
-    --foreground: 0 0% 98%; /* Light Text */
+    /* Style Guidelines:
+    - Primary color: Vibrant blue (#29ABE2) to evoke trust and security in financial transactions.
+    - Background color: Light gray (#F5F5F5), providing a neutral backdrop that emphasizes content.
+    - Accent color: Yellow (#FFDA63) to highlight important actions and interactive elements.
+    */
+    /* For dark mode, we can invert or use darker shades. For now, keeping PRD colors for consistency, may need specific dark theme adjustments if requested */
+    --background: 250 5% 16%; 
+    --foreground: 0 0% 98%; 
 
-    --card: 250 5% 12%; /* Slightly darker than background for cards */
+    --card: 250 5% 12%; 
     --card-foreground: 0 0% 98%;
 
     --popover: 250 5% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 260 60% 50%; /* PancakeSwap Purple */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 196 78% 62%; /* Lighter Vibrant blue for dark mode */
+    --primary-foreground: 0 0% 9.9%; 
 
-    --secondary: 250 5% 22%; /* Slightly lighter dark */
+    --secondary: 250 5% 22%; 
     --secondary-foreground: 0 0% 98%;
 
     --muted: 250 5% 22%;
     --muted-foreground: 0 0% 63.9%;
 
-    --accent: 184 80% 42%; /* PancakeSwap Teal */
-    --accent-foreground: 0 0% 98%; /* Light text on Teal for dark mode */
+    --accent: 45 100% 65%; /* Slightly desaturated Yellow for dark mode */
+    --accent-foreground: 0 0% 3.9%; 
 
-    --destructive: 0 70% 50%; /* Adjusted Red for dark mode */
+    --destructive: 0 70% 50%; 
     --destructive-foreground: 0 0% 98%;
 
     --border: 250 5% 25%;
     --input: 250 5% 25%;
-    --ring: 260 60% 50%; /* PancakeSwap Purple for rings */
+    --ring: 196 78% 62%; 
 
-    --chart-1: 260 60% 50%; /* Primary - Purple */
-    --chart-2: 184 80% 42%; /* Accent - Teal */
-    --chart-3: 260 70% 65%; /* Lighter Purple for Dark Mode */
-    --chart-4: 39 100% 61%; /* Yellow/Orange Accent */
-    --chart-5: 184 90% 55%; /* Brighter Teal for Dark Mode */
+    --chart-1: 196 78% 62%;
+    --chart-2: 45 100% 65%;
+    --chart-3: 196 70% 75%;
+    --chart-4: 39 100% 61%;
+    --chart-5: 196 90% 55%;
     
     --sidebar-background: 250 5% 13%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 260 60% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 184 80% 42%;
-    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-primary: 196 78% 62%;
+    --sidebar-primary-foreground: 0 0% 9.9%;
+    --sidebar-accent: 45 100% 65%;
+    --sidebar-accent-foreground: 0 0% 3.9%;
     --sidebar-border: 250 5% 20%;
-    --sidebar-ring: 260 60% 50%;
+    --sidebar-ring: 196 78% 62%;
   }
 }
 
@@ -102,7 +108,7 @@
     @apply border-border;
   }
   html {
-    font-size: 90%; /* Reduces global font size */
+    font-size: 90%; 
   }
   body {
     @apply bg-background text-foreground;
