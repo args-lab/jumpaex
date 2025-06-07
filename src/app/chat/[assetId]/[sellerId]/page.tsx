@@ -214,7 +214,7 @@ function ChatPageContent() {
   const formattedFiat = formatFiatDisplay(fiatAmountNum, initialTradeData.fiatCurrency || 'USD', locale);
 
   return (
-    <div className="flex flex-col h-screen bg-muted/30">
+    <div className="flex flex-col h-screen bg-background">
       {/* Custom Chat Header */}
       <header className="sticky top-0 z-20 flex items-center justify-between p-3 border-b bg-background shadow-sm">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9">
@@ -251,7 +251,7 @@ function ChatPageContent() {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea ref={scrollAreaRef} className="flex-grow p-2 sm:p-4">
+      <ScrollArea ref={scrollAreaRef} className="flex-grow p-2 sm:p-4 bg-muted/20">
         <div className="space-y-3">
           {messages.map(msg => {
             if (msg.type === 'welcome_banner') {
@@ -267,7 +267,7 @@ function ChatPageContent() {
                     <div className="absolute inset-0 flex items-center">
                         <span className="w-full border-t"></span>
                     </div>
-                    <span className="relative bg-muted/30 px-2 text-xs text-muted-foreground">{msg.text}</span>
+                    <span className="relative bg-muted/20 px-2 text-xs text-muted-foreground">{msg.text}</span>
                 </div>
               );
             }
@@ -369,3 +369,5 @@ export default function ChatPage() {
     </Suspense>
   )
 }
+
+    
