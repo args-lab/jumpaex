@@ -4,6 +4,10 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    @apply h-full;
+  }
+
   :root {
     --background: 0 0% 96%; /* Light gray (#F5F5F5) */
     --foreground: 0 0% 3.9%; 
