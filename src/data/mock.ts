@@ -105,6 +105,18 @@ export const mockAssets: Asset[] = [
     change24h: 2.1,
     seller: 'EuroBitcoinMax',
   },
+  { // Added MOVE to mockAssets for easier price lookup
+    id: '7',
+    name: 'Move',
+    price: 0.15, // Example price in USDT
+    currency: 'USDT',
+    region: 'global',
+    network: 'solana', // Assuming Solana, adjust if different
+    icon: 'https://placehold.co/32x32.png', // Placeholder, same as in assets page
+    volume: 10000,
+    change24h: 3.0,
+    seller: 'MoveMover',
+  }
 ];
 
 export const MOCK_CONVERSION_RATES: Record<string, number> = {
@@ -113,17 +125,22 @@ export const MOCK_CONVERSION_RATES: Record<string, number> = {
   EUR: 1.08, // Example: 1 EUR = 1.08 USD
   GBP: 1.25, // Example: 1 GBP = 1.25 USD
   IDR: 1 / 16000, // Example: 1 IDR = 1/16000 USD
+  MOVE: 0.15, // MOVE to USD rate (1 MOVE = 0.15 USD)
   // Add other fiat currencies if needed
 };
 
 export const getAssetPriceInUSD = (assetSymbolOrId: string, assets: Asset[] = mockAssets): number => {
-  const assetInfo = assets.find(a => a.id.toUpperCase() === assetSymbolOrId.toUpperCase() || a.name.toUpperCase().startsWith(assetSymbolOrId.toUpperCase()) || a.name.toUpperCase() === assetSymbolOrId.toUpperCase());
+  const upperSymbol = assetSymbolOrId.toUpperCase();
+
+  // First, check direct conversion rates (like fiat or MOVE)
+  if (MOCK_CONVERSION_RATES[upperSymbol]) {
+    return MOCK_CONVERSION_RATES[upperSymbol];
+  }
+  
+  // Then, look up in mockAssets
+  const assetInfo = assets.find(a => a.id.toUpperCase() === upperSymbol || a.name.toUpperCase().startsWith(upperSymbol) || a.name.toUpperCase() === upperSymbol || a.symbol?.toUpperCase() === upperSymbol);
 
   if (!assetInfo) {
-    const upperSymbol = assetSymbolOrId.toUpperCase();
-    if (MOCK_CONVERSION_RATES[upperSymbol]) {
-      return MOCK_CONVERSION_RATES[upperSymbol];
-    }
     console.warn(`Asset or symbol ${assetSymbolOrId} not found for USD price conversion.`);
     return 0;
   }
@@ -132,15 +149,17 @@ export const getAssetPriceInUSD = (assetSymbolOrId: string, assets: Asset[] = mo
   if (currencyUpper === 'USD') {
     return assetInfo.price;
   }
-  if (MOCK_CONVERSION_RATES[currencyUpper]) {
+  if (MOCK_CONVERSION_RATES[currencyUpper]) { // If asset currency is EUR, GBP etc.
     return assetInfo.price * MOCK_CONVERSION_RATES[currencyUpper];
   }
-  if (currencyUpper === 'USDT' && MOCK_CONVERSION_RATES['USDT'] === 1) {
+   // This handles cases like BTC price in USDT, ETH price in USDT
+  if (currencyUpper === 'USDT' && MOCK_CONVERSION_RATES['USDT'] === 1) { 
       return assetInfo.price;
   }
 
-  console.warn(`Conversion rate for ${assetInfo.currency} to USD not found. Assuming 1:1 or check MOCK_CONVERSION_RATES.`);
-  return assetInfo.price;
+
+  console.warn(`Conversion rate for ${assetInfo.currency} to USD not found for asset ${assetInfo.name}. Assuming 1:1 or check MOCK_CONVERSION_RATES.`);
+  return assetInfo.price; // Fallback, might not be USD
 };
 
 
@@ -309,6 +328,13 @@ export const depositableAssets: DepositableAsset[] = [
     symbol: 'BNB',
     icon: Replace,
     supportedNetworks: ['bsc']
+  },
+  { // Added for convert page example
+    id: 'move',
+    name: 'Move',
+    symbol: 'MOVE',
+    icon: 'https://placehold.co/32x32.png', // Placeholder Icon
+    supportedNetworks: ['solana'] // Example, adjust if needed
   },
 ];
 
