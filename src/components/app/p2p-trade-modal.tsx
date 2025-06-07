@@ -2,6 +2,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } // Added useRouter
+from 'next/navigation'; 
 import {
   Dialog,
   DialogContent,
@@ -16,8 +18,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge'; // Added import
-import { ArrowLeft, ChevronRight, ShieldCheck, Info, RefreshCcw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge'; 
+import { ArrowLeft, ChevronRight, ShieldCheck, Info, RefreshCcw, Loader2 } from 'lucide-react'; // Added Loader2
 import type { P2POffer, Currency } from '@/types';
 import { mockCurrencies, depositableAssets } from '@/data/mock';
 import { useToast } from '@/hooks/use-toast';
@@ -66,10 +68,15 @@ export function P2PTradeModal({
   tradeType,
   locale,
 }: P2PTradeModalProps) {
+  const router = useRouter();
   const { toast } = useToast();
   const [inputMode, setInputMode] = useState<'fiat' | 'crypto'>('fiat');
   const [inputValue, setInputValue] = useState<string>('');
-  const [calculatedAmount, setCalculatedAmount] = useState<string>('');
+  
+  const [calculatedFiatAmount, setCalculatedFiatAmount] = useState<number>(0);
+  const [calculatedCryptoAmount, setCalculatedCryptoAmount] = useState<number>(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+
 
   const cryptoAssetDetails = depositableAssets.find(da => da.symbol === offer.cryptoAssetSymbol);
 
@@ -77,53 +84,116 @@ export function P2PTradeModal({
     if (!isOpen) {
       setInputValue('');
       setInputMode('fiat');
-      setCalculatedAmount('');
+      setCalculatedFiatAmount(0);
+      setCalculatedCryptoAmount(0);
+      setIsProcessing(false);
     }
   }, [isOpen]);
 
   useEffect(() => {
     const numericValue = parseFloat(inputValue);
     if (isNaN(numericValue) || numericValue <= 0) {
-      setCalculatedAmount(formatCryptoDisplay(0, offer.cryptoAssetSymbol, locale));
+      setCalculatedFiatAmount(0);
+      setCalculatedCryptoAmount(0);
       return;
     }
 
     if (inputMode === 'fiat') {
+      setCalculatedFiatAmount(numericValue);
       const cryptoEquivalent = numericValue / offer.pricePerCrypto;
-      setCalculatedAmount(formatCryptoDisplay(cryptoEquivalent, offer.cryptoAssetSymbol, locale));
+      setCalculatedCryptoAmount(cryptoEquivalent);
     } else { // inputMode === 'crypto'
+      setCalculatedCryptoAmount(numericValue);
       const fiatEquivalent = numericValue * offer.pricePerCrypto;
-      setCalculatedAmount(formatFiatDisplay(fiatEquivalent, offer.fiatCurrency, locale));
+      setCalculatedFiatAmount(fiatEquivalent);
     }
   }, [inputValue, inputMode, offer, locale]);
 
   const handlePlaceOrder = () => {
-    // Placeholder for actual order placement logic
-    toast({
-      title: "Order Placed (Mock)",
-      description: `Your order to ${tradeType} ${inputValue} ${inputMode === 'fiat' ? offer.fiatCurrency : offer.cryptoAssetSymbol} has been placed.`,
+    setIsProcessing(true);
+    
+    const numericInputValue = parseFloat(inputValue);
+    if (isNaN(numericInputValue) || numericInputValue <= 0) {
+        toast({ title: "Invalid Amount", description: "Please enter a valid amount.", variant: "destructive" });
+        setIsProcessing(false);
+        return;
+    }
+
+    let finalFiatAmount = 0;
+    let finalCryptoAmount = 0;
+
+    if (inputMode === 'fiat') {
+        finalFiatAmount = numericInputValue;
+        finalCryptoAmount = numericInputValue / offer.pricePerCrypto;
+    } else {
+        finalCryptoAmount = numericInputValue;
+        finalFiatAmount = numericInputValue * offer.pricePerCrypto;
+    }
+    
+    // Validate limits based on fiat amount
+    if (finalFiatAmount < offer.minLimitFiat || finalFiatAmount > offer.maxLimitFiat) {
+        toast({
+            title: "Amount Out of Range",
+            description: `Amount must be between ${formatFiatDisplay(offer.minLimitFiat, offer.fiatCurrency, locale)} and ${formatFiatDisplay(offer.maxLimitFiat, offer.fiatCurrency, locale)}.`,
+            variant: "destructive"
+        });
+        setIsProcessing(false);
+        return;
+    }
+
+
+    // Construct query parameters
+    const queryParams = new URLSearchParams({
+      orderId: `mock_${Date.now()}`, // Mock order ID
+      fiatAmount: finalFiatAmount.toString(),
+      cryptoAmount: finalCryptoAmount.toString(),
+      pricePerCrypto: offer.pricePerCrypto.toString(),
+      fiatCurrency: offer.fiatCurrency,
+      cryptoAssetSymbol: offer.cryptoAssetSymbol,
+      sellerName: offer.sellerName,
+      sellerAvatarInitial: offer.sellerAvatarInitial,
+      paymentMethod: offer.paymentMethods[0] || 'Bank Transfer', // Default to first or a generic one
+      advertiserRequirements: offer.advertiserRequirements || '',
+      assetId: cryptoAssetDetails?.id || offer.cryptoAssetSymbol, // Use a real asset ID if available
+      sellerId: `mockSeller_${offer.sellerName.replace(/\s+/g, '')}`, // Mock seller ID
+      tradeType: tradeType,
     });
-    onOpenChange(false);
+    
+    // Simulate API call and then navigate
+    setTimeout(() => {
+        router.push(`/order-created/mockOrderId?${queryParams.toString()}`);
+        onOpenChange(false); // Close current modal
+        // setIsProcessing(false); // Already closed
+    }, 1000);
   };
 
   const handleMax = () => {
     if (inputMode === 'fiat') {
       setInputValue(offer.maxLimitFiat.toString());
     } else {
-      const maxCrypto = offer.maxLimitFiat / offer.pricePerCrypto;
-      // Check against available crypto if selling, or just use fiat limit conversion if buying
-      const cryptoLimit = tradeType === 'sell' ? Math.min(maxCrypto, offer.availableCrypto) : maxCrypto;
-      setInputValue(cryptoLimit.toFixed(8)); // Using a fixed precision, adjust as needed
+      // If selling, availableCrypto is the limit. If buying, maxLimitFiat converted to crypto.
+      const cryptoLimitBasedOnFiat = offer.maxLimitFiat / offer.pricePerCrypto;
+      const maxCrypto = tradeType === 'sell' ? Math.min(cryptoLimitBasedOnFiat, offer.availableCrypto) : cryptoLimitBasedOnFiat;
+      setInputValue(maxCrypto.toFixed(8)); // Using a fixed precision
     }
   };
 
   const CryptoIcon = cryptoAssetDetails?.icon;
 
+  const displayReceivePayLabel = inputMode === 'fiat' 
+    ? (tradeType === 'buy' ? 'You Receive (approx.):' : 'You Pay (approx.):')
+    : (tradeType === 'buy' ? 'You Pay (approx.):' : 'You Receive (approx.):');
+  
+  const displayCalculatedAmount = inputMode === 'fiat' 
+    ? formatCryptoDisplay(calculatedCryptoAmount, offer.cryptoAssetSymbol, locale)
+    : formatFiatDisplay(calculatedFiatAmount, offer.fiatCurrency, locale);
+
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0 gap-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
         <DialogHeader className="flex flex-row items-center justify-between p-4 border-b sticky top-0 bg-background z-10">
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8" disabled={isProcessing}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex flex-col items-center">
@@ -134,7 +204,7 @@ export function P2PTradeModal({
             </DialogTitle>
             <DialogDescription className="text-xs">
               Price: {formatFiatDisplay(offer.pricePerCrypto, offer.fiatCurrency, locale)}
-              <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 opacity-60 hover:opacity-100"><RefreshCcw className="h-3 w-3" /></Button>
+              <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 opacity-60 hover:opacity-100" disabled={isProcessing}><RefreshCcw className="h-3 w-3" /></Button>
             </DialogDescription>
           </div>
           <div className="w-8"></div>{/* Spacer */}
@@ -143,8 +213,8 @@ export function P2PTradeModal({
         <div className="flex-grow overflow-y-auto p-4 space-y-6">
           <Tabs value={inputMode} onValueChange={(value) => setInputMode(value as 'fiat' | 'crypto')} className="w-full">
             <TabsList className="grid w-full grid-cols-2 h-auto p-1">
-              <TabsTrigger value="fiat" className="py-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">By {offer.fiatCurrency}</TabsTrigger>
-              <TabsTrigger value="crypto" className="py-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">By {offer.cryptoAssetSymbol}</TabsTrigger>
+              <TabsTrigger value="fiat" className="py-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm" disabled={isProcessing}>By {offer.fiatCurrency}</TabsTrigger>
+              <TabsTrigger value="crypto" className="py-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm" disabled={isProcessing}>By {offer.cryptoAssetSymbol}</TabsTrigger>
             </TabsList>
             <TabsContent value="fiat" className="mt-0">
               <div className="relative mt-4">
@@ -154,9 +224,10 @@ export function P2PTradeModal({
                   value={inputMode === 'fiat' ? inputValue : ''}
                   onChange={(e) => inputMode === 'fiat' && setInputValue(e.target.value)}
                   className="h-16 text-3xl font-bold pr-20 text-left pl-4 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  disabled={isProcessing}
                 />
                 <span className="absolute right-12 top-1/2 -translate-y-1/2 text-xl font-medium text-muted-foreground">{offer.fiatCurrency}</span>
-                <Button variant="ghost" onClick={handleMax} className="absolute right-2 top-1/2 -translate-y-1/2 text-primary h-auto px-2 py-1 text-sm">Max</Button>
+                <Button variant="ghost" onClick={handleMax} className="absolute right-2 top-1/2 -translate-y-1/2 text-primary h-auto px-2 py-1 text-sm" disabled={isProcessing}>Max</Button>
               </div>
             </TabsContent>
             <TabsContent value="crypto" className="mt-0">
@@ -167,9 +238,10 @@ export function P2PTradeModal({
                   value={inputMode === 'crypto' ? inputValue : ''}
                   onChange={(e) => inputMode === 'crypto' && setInputValue(e.target.value)}
                   className="h-16 text-3xl font-bold pr-24 text-left pl-4 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  disabled={isProcessing}
                 />
                 <span className="absolute right-12 top-1/2 -translate-y-1/2 text-xl font-medium text-muted-foreground">{offer.cryptoAssetSymbol}</span>
-                <Button variant="ghost" onClick={handleMax} className="absolute right-2 top-1/2 -translatey-1/2 text-primary h-auto px-2 py-1 text-sm">Max</Button>
+                <Button variant="ghost" onClick={handleMax} className="absolute right-2 top-1/2 -translatey-1/2 text-primary h-auto px-2 py-1 text-sm" disabled={isProcessing}>Max</Button>
               </div>
             </TabsContent>
           </Tabs>
@@ -177,13 +249,16 @@ export function P2PTradeModal({
           <div className="text-xs text-muted-foreground px-1">
             Limit: {formatFiatDisplay(offer.minLimitFiat, offer.fiatCurrency, locale, false)} - {formatFiatDisplay(offer.maxLimitFiat, offer.fiatCurrency, locale)}
           </div>
-          <div className="text-sm px-1">
-            {inputMode === 'fiat' ? 'You Receive (approx.):' : (tradeType === 'buy' ? 'You Pay (approx.):' : 'You Receive (approx.):')} <span className="font-semibold">{calculatedAmount}</span>
-          </div>
+          {(calculatedFiatAmount > 0 || calculatedCryptoAmount > 0) && (
+             <div className="text-sm px-1">
+               {displayReceivePayLabel} <span className="font-semibold">{displayCalculatedAmount}</span>
+             </div>
+          )}
+
 
           <Separator />
 
-          <Button variant="outline" className="w-full justify-between h-auto py-3">
+          <Button variant="outline" className="w-full justify-between h-auto py-3" disabled={isProcessing}>
             <span className="text-sm">Select Payment Method</span>
             <div className="flex items-center">
               <Badge variant="secondary" className="mr-2">{offer.paymentMethods.length}</Badge>
@@ -203,7 +278,7 @@ export function P2PTradeModal({
                 <span className="text-sm font-medium">{offer.sellerName}</span>
                 {offer.isSellerVerified && <ShieldCheck className="h-4 w-4 ml-1 text-yellow-500" />}
               </div>
-              <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-green-600">
+              <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-green-600" disabled={isProcessing}>
                 <span className="h-2 w-2 bg-green-500 rounded-full mr-1.5"></span>
                 Online
                 <ChevronRight className="h-3 w-3 ml-0.5 text-muted-foreground" />
@@ -219,9 +294,15 @@ export function P2PTradeModal({
           <Button 
             className="w-full h-12 text-base bg-green-500 hover:bg-green-600 text-white" 
             onClick={handlePlaceOrder}
-            disabled={!inputValue || parseFloat(inputValue) <= 0}
+            disabled={isProcessing || !inputValue || (inputMode === 'fiat' ? calculatedFiatAmount : calculatedCryptoAmount) <=0 }
           >
-            Place Order
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Placing Order...
+              </>
+            ) : (
+              'Place Order'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -229,3 +310,4 @@ export function P2PTradeModal({
   );
 }
 
+    
