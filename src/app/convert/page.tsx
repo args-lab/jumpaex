@@ -100,7 +100,7 @@ export default function ConvertPage() {
     setFromAmount(availableFromBalance.toString());
   };
 
-  const handlePreview = () => {
+  const handleConvert = () => { // Renamed from handlePreview
     if (!fromAmount || parseFloat(fromAmount) <= 0) {
       toast({ title: "Error", description: "Please enter a valid amount to convert.", variant: "destructive" });
       return;
@@ -114,8 +114,8 @@ export default function ConvertPage() {
         return;
     }
     toast({
-      title: 'Preview Conversion (Mock)',
-      description: `Convert ${fromAmount} ${fromAssetSymbol} to approx. ${toAmount} ${toAssetSymbol}.`,
+      title: 'Conversion Submitted (Mock)', // Updated toast message
+      description: `Converting ${fromAmount} ${fromAssetSymbol} to approx. ${toAmount} ${toAssetSymbol}.`,
     });
   };
   
@@ -217,10 +217,10 @@ export default function ConvertPage() {
         <Button
           size="lg"
           className="w-full max-w-md mx-auto mt-8 h-12 text-base bg-accent hover:bg-accent/90 text-accent-foreground"
-          onClick={handlePreview}
+          onClick={handleConvert} // Renamed handler
           disabled={!fromAmount || parseFloat(fromAmount) <= 0 || !toAmount || parseFloat(toAmount) <= 0}
         >
-          Preview
+          Convert {/* Updated Label */}
         </Button>
 
       </main>
@@ -228,3 +228,5 @@ export default function ConvertPage() {
     </div>
   );
 }
+
+    
