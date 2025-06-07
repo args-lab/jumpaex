@@ -76,3 +76,28 @@ export interface MockSeller {
   desiredPricePerAssetUSD?: number; // Seller's asking price for one unit of the asset, in USD
 }
 
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  icon?: LucideIcon | string; // Optional icon
+}
+
+export interface P2POffer {
+  id: string;
+  sellerName: string;
+  sellerAvatarInitial: string; // e.g., 'S' for STONE_EXCHANGER
+  isSellerVerified: boolean; // For the yellow shield icon
+  tradeCount: number;
+  completionRate: number; // e.g., 99.90 for 99.90%
+  positiveFeedbackRate?: number; // e.g., 99.23 for 99.23%
+  pricePerCrypto: number; // e.g., 16500
+  fiatCurrency: string; // e.g., 'IDR', 'USD'
+  cryptoAssetSymbol: string; // e.g., 'USDT'
+  minLimitFiat: number; // e.g. 10000
+  maxLimitFiat: number; // e.g. 5000000
+  availableCrypto: number; // e.g. 648.62
+  paymentMethods: string[]; // Array of payment method names or IDs
+  avgCompletionTimeMinutes: number; // e.g., 15
+  isPromoted?: boolean; // For the "New P2P User Trading Zone" or other highlights
+  tags?: string[]; // e.g., ["Verification"]
+}

@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, ArrowLeftRight, ArrowDownUp, User, WalletCards } from 'lucide-react';
+import { Home, ArrowLeftRight, ArrowDownUp, User, WalletCards, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -12,9 +12,10 @@ export function BottomNavigationBar() {
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
-    { href: '/transactions', label: 'Transaction', icon: ArrowLeftRight },
+    { href: '/market', label: 'Market', icon: Store },
+    { href: '/transactions', label: 'Trades', icon: ArrowLeftRight },
     { href: '/assets', label: 'Assets', icon: WalletCards },
-    { href: '/wallet', label: 'Deposit/Withdraw', icon: ArrowDownUp },
+    { href: '/wallet', label: 'Funds', icon: ArrowDownUp },
     { href: '/account', label: 'Account', icon: User },
   ];
 
