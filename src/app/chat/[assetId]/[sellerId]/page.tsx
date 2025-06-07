@@ -20,9 +20,9 @@ interface Message {
   timestamp?: Date;
   type?: 'order_created_banner' | 'seller_instructions' | 'welcome_banner' | 'new_messages_divider';
   orderId?: string;
-  fiatAmount?: string;
+  fiatAmount?: string; // Storing as string from params
   fiatCurrency?: string;
-  payWithin?: string;
+  payWithin?: string; // e.g., "13:53"
   detailedInstructions?: {
     title: string;
     items: string[];
@@ -72,7 +72,7 @@ function ChatPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [initialTradeData, setInitialTradeData] = useState<ChatInitialData | null>(null);
   const [locale, setLocale] = useState<string | undefined>(undefined);
-  const [payWithinTimer, setPayWithinTimer] = useState<string>("14:59"); // Mock timer
+  const [payWithinTimer, setPayWithinTimer] = useState<string>("13:53"); // Mock timer from image
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -99,8 +99,8 @@ function ChatPageContent() {
       fiatCurrency: searchParams.get('fiatCurrency') || undefined,
       cryptoAssetSymbol: searchParams.get('cryptoAssetSymbol') || undefined,
       pricePerCrypto: searchParams.get('pricePerCrypto') || undefined,
-      orderId: searchParams.get('orderId') || `xx${Math.floor(Math.random() * 9000) + 1000}`,
-      sellerName: searchParams.get('sellerName') || undefined,
+      orderId: searchParams.get('orderId') || `xx${Math.floor(Math.random() * 9000) + 1000}`, // Keep random for mock
+      sellerName: searchParams.get('sellerName') || undefined, // Will be set by seller lookup
     };
     if (data.tradeType && data.cryptoAssetSymbol) {
       setInitialTradeData(data);
@@ -120,10 +120,13 @@ function ChatPageContent() {
             };
           }
       }
-      const foundSeller = mockSellers.find(s => s.id === sellerId || `mockSeller_${s.name.replace(/\s+/g, '')}` === sellerId || s.name === initialTradeData?.sellerName);
+      const foundSeller = mockSellers.find(s => s.id === sellerId || `mockSeller_${s.name.replace(/\s+/g, '')}` === sellerId);
       
       setAsset(foundAsset || null);
       setSeller(foundSeller || null);
+      if (foundSeller && initialTradeData && !initialTradeData.sellerName) {
+        setInitialTradeData(prev => ({...prev!, sellerName: foundSeller.name}));
+      }
       setIsLoading(false);
     }
   }, [assetId, sellerId, initialTradeData]);
@@ -136,7 +139,7 @@ function ChatPageContent() {
         id: 'sys_welcome',
         type: 'welcome_banner',
         sender: 'system-banner',
-        text: "Welcome to the new Chatroom. Tap to sync old messages to this chatroom, if any."
+        text: "Welcome to the new Chatroom. " // Tap to sync part handled in render
       },
       {
         id: 'sys_divider',
@@ -149,9 +152,9 @@ function ChatPageContent() {
         type: 'order_created_banner',
         sender: 'system-banner',
         orderId: initialTradeData.orderId,
-        fiatAmount: initialTradeData.fiatAmount,
-        fiatCurrency: initialTradeData.fiatCurrency,
-        payWithin: payWithinTimer,
+        fiatAmount: initialTradeData.fiatAmount, // Pass along for display if needed
+        fiatCurrency: initialTradeData.fiatCurrency, // Pass along
+        text: `Order (${initialTradeData.orderId}) created. Please complete the payment and mark the order as paid in time, or the order will be canceled.`,
       },
       {
         id: 'seller_instr_1',
@@ -226,7 +229,7 @@ function ChatPageContent() {
           </Avatar>
           <div>
             <div className="flex items-center">
-              <p className="font-semibold text-sm">{seller.name}</p>
+              <p className="font-semibold text-sm">{initialTradeData.sellerName || seller.name}</p>
               <ShieldCheck className="ml-1 h-3.5 w-3.5 text-yellow-500 fill-yellow-500/30" />
             </div>
             <p className="text-xs text-muted-foreground">Last seen 1 min(s) ago</p>
@@ -257,7 +260,7 @@ function ChatPageContent() {
             if (msg.type === 'welcome_banner') {
               return (
                 <div key={msg.id} className="text-center text-xs text-muted-foreground py-2">
-                  {msg.text} <a href="#" className="text-primary underline">Tap</a> to sync.
+                  {msg.text}<a href="#" className="text-primary underline">Tap</a> to sync old messages to this chatroom, if any.
                 </div>
               );
             }
@@ -273,8 +276,8 @@ function ChatPageContent() {
             }
             if (msg.type === 'order_created_banner' && msg.orderId) {
               return (
-                <div key={msg.id} className="p-3 my-2 rounded-md border bg-card text-xs text-muted-foreground shadow-sm">
-                  Order ({msg.orderId}) created. Please complete the payment and mark the order as paid in time, or the order will be canceled.
+                <div key={msg.id} className="my-2 text-xs text-muted-foreground text-left px-1">
+                  {msg.text}
                   <Button variant="link" className="p-0 h-auto text-xs text-yellow-600 hover:text-yellow-700 ml-1">View Payment Details</Button>
                 </div>
               );
@@ -286,7 +289,7 @@ function ChatPageContent() {
                   <Avatar className="h-7 w-7 self-start">
                     <AvatarFallback className="text-xs bg-muted text-muted-foreground">{sellerAvatarInitial}</AvatarFallback>
                   </Avatar>
-                  <div className="p-3 rounded-lg bg-card shadow max-w-[80%]">
+                  <div className="p-3 rounded-lg bg-card shadow-sm max-w-[80%]">
                     <p className="font-semibold text-sm mb-1">{title}</p>
                     <ul className="space-y-0.5 mb-2">
                       {items.map((item, index) => (
@@ -313,12 +316,12 @@ function ChatPageContent() {
                 className={`flex items-end space-x-2 ${msg.sender === 'user' ? 'justify-end' : ''}`}
               >
                 {msg.sender === 'other' && (
-                  <Avatar className="h-7 w-7">
+                  <Avatar className="h-7 w-7 self-start">
                     <AvatarFallback className="text-xs bg-muted text-muted-foreground">{sellerAvatarInitial}</AvatarFallback>
                   </Avatar>
                 )}
                 <div
-                  className={cn("p-2.5 rounded-lg max-w-[75%] shadow", 
+                  className={cn("p-2.5 rounded-lg max-w-[75%] shadow-sm", 
                     msg.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card'
                   )}
                 >
@@ -330,7 +333,7 @@ function ChatPageContent() {
                   )}
                 </div>
                 {msg.sender === 'user' && (
-                   <Avatar className="h-7 w-7">
+                   <Avatar className="h-7 w-7 self-start">
                     <AvatarFallback className="text-xs bg-blue-500 text-white">U</AvatarFallback>
                   </Avatar>
                 )}
@@ -369,5 +372,6 @@ export default function ChatPage() {
     </Suspense>
   )
 }
+    
 
     
