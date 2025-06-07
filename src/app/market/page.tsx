@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react'; // Added this line
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { Header } from '@/components/app/header';
