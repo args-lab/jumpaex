@@ -21,9 +21,9 @@ interface Message {
   timestamp?: Date;
   type?: 'order_created_banner' | 'seller_instructions' | 'welcome_banner' | 'new_messages_divider';
   orderId?: string;
-  fiatAmount?: string; 
+  fiatAmount?: string;
   fiatCurrency?: string;
-  payWithin?: string; 
+  payWithin?: string;
   detailedInstructions?: {
     title: string;
     items: string[];
@@ -43,13 +43,16 @@ interface ChatInitialData {
 }
 
 const formatFiatDisplay = (value: number, currencyCode: string, locale: string | undefined): string => {
-  if (isNaN(value) || !isFinite(value)) return `${mockCurrencies.find(c=>c.id.toUpperCase() === currencyCode.toUpperCase())?.symbol || currencyCode}0.00`;
+  if (isNaN(value) || !isFinite(value)) {
+    const fallbackSymbol = mockCurrencies.find(c=>c.id.toUpperCase() === (currencyCode?.toUpperCase() || 'USD'))?.symbol || currencyCode || '$';
+    return `${fallbackSymbol}0.00`;
+  }
   const targetCurrencyInfo = mockCurrencies.find(c => c.id.toUpperCase() === currencyCode.toUpperCase() || c.symbol.toUpperCase() === currencyCode.toUpperCase());
   const displaySymbol = targetCurrencyInfo?.symbol || currencyCode.toUpperCase();
   const fractionDigits = currencyCode.toUpperCase() === 'IDR' ? 0 : 2;
 
   try {
-    return value.toLocaleString(locale, { style: 'currency', currency: targetCurrencyInfo?.id || currencyCode.toUpperCase(), minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits });
+    return value.toLocaleString(locale, { style: 'currency', currency: targetCurrencyInfo?.id || currencyCode.toUpperCase() || 'USD', minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits });
   } catch (e) {
     return `${value.toLocaleString(locale, { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits })} ${displaySymbol}`;
   }
@@ -62,21 +65,21 @@ function ChatPageContent() {
   const searchParams = useSearchParams();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const assetId = typeof params.assetId === 'string' ? params.assetId : '';
-  const sellerId = typeof params.sellerId === 'string' ? params.sellerId : '';
+  const assetIdParam = typeof params.assetId === 'string' ? params.assetId : '';
+  const sellerIdParam = typeof params.sellerId === 'string' ? params.sellerId : '';
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  
+
   const [initialTradeData, setInitialTradeData] = useState<ChatInitialData | null>(null);
   const [isInitialTradeDataLoaded, setIsInitialTradeDataLoaded] = useState(false);
 
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [seller, setSeller] = useState<MockSeller | null | undefined>(undefined);
-  const [isLoadingAssetSeller, setIsLoadingAssetSeller] = useState(true); 
-  
+  const [isLoadingAssetSeller, setIsLoadingAssetSeller] = useState(true);
+
   const [locale, setLocale] = useState<string | undefined>(undefined);
-  const [payWithinTimer, setPayWithinTimer] = useState<string>("13:53");
+  const [payWithinTimer, setPayWithinTimer] = useState<string>("13:53"); // Static for now
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -93,7 +96,7 @@ function ChatPageContent() {
     }
   }, [messages]);
 
-  useEffect(() => { // Step 1: Load initialTradeData from searchParams
+  useEffect(() => {
     const tradeType = searchParams.get('tradeType') as 'buy' | 'sell' | undefined;
     const cryptoAssetSymbol = searchParams.get('cryptoAssetSymbol') || undefined;
 
@@ -105,69 +108,64 @@ function ChatPageContent() {
         fiatCurrency: searchParams.get('fiatCurrency') || undefined,
         cryptoAssetSymbol: cryptoAssetSymbol,
         pricePerCrypto: searchParams.get('pricePerCrypto') || undefined,
-        orderId: searchParams.get('orderId') || `xx${Math.floor(Math.random() * 9000) + 1000}`,
+        orderId: searchParams.get('orderId') || `mock${Math.floor(Math.random() * 9000) + 1000}`,
         sellerName: searchParams.get('sellerName') || undefined,
       });
     } else {
-      setInitialTradeData(null); // Explicitly null if critical params are missing
-      console.error("ChatPage: Missing tradeType or cryptoAssetSymbol in searchParams.", Object.fromEntries(searchParams.entries()));
+      setInitialTradeData(null);
     }
     setIsInitialTradeDataLoaded(true);
   }, [searchParams]);
 
-  useEffect(() => { // Step 2: Load asset & seller, depends on initialTradeData being processed
+  useEffect(() => {
     if (!isInitialTradeDataLoaded) {
-      return; // Wait for initialTradeData to be processed
+      return;
     }
 
-    if (!initialTradeData) { // If initialTradeData itself is null (error case from step 1)
-        setAsset(null);
-        setSeller(null);
-        setIsLoadingAssetSeller(false);
-        return;
-    }
-
-    if (assetId && sellerId) {
-      let foundAsset = mockAssets.find(a => a.id.toLowerCase() === assetId.toLowerCase() || a.name.toLowerCase() === assetId.toLowerCase());
-       if (!foundAsset) {
-          const depoAsset = depositableAssets.find(da => da.id.toLowerCase() === assetId.toLowerCase() || da.symbol.toLowerCase() === assetId.toLowerCase());
+    if (assetIdParam && sellerIdParam) {
+      let foundAsset = mockAssets.find(a => a.id.toLowerCase() === assetIdParam.toLowerCase() || a.name.toLowerCase() === assetIdParam.toLowerCase());
+       if (!foundAsset && initialTradeData?.cryptoAssetSymbol) { // Attempt to find by symbol from initialTradeData if assetId lookup failed
+          const depoAsset = depositableAssets.find(da => da.symbol.toLowerCase() === initialTradeData.cryptoAssetSymbol.toLowerCase());
           if (depoAsset) {
             foundAsset = {
-                id: depoAsset.id, name: depoAsset.name, price: parseFloat(initialTradeData.pricePerCrypto || '0'), 
-                currency: initialTradeData.fiatCurrency || 'USD', 
+                id: depoAsset.id, name: depoAsset.name, price: parseFloat(initialTradeData.pricePerCrypto || '0'),
+                currency: initialTradeData.fiatCurrency || 'USD',
                 region: 'global', network: depoAsset.supportedNetworks[0] || 'unknown', icon: depoAsset.icon,
                 volume: 0, change24h: 0, seller: '',
             };
           }
       }
-      const foundSeller = mockSellers.find(s => s.id === sellerId || `mockSeller_${s.name.replace(/\s+/g, '').toLowerCase()}` === sellerId.toLowerCase());
-      
+      const foundSeller = mockSellers.find(s => s.id === sellerIdParam || `mockSeller_${s.name.replace(/\s+/g, '').toLowerCase()}` === sellerIdParam.toLowerCase());
+
       setAsset(foundAsset || null);
       setSeller(foundSeller || null);
-      
-      // If sellerName wasn't in query params but we found a seller, update initialTradeData
-      if (foundSeller && !initialTradeData.sellerName) {
+
+      if (foundSeller && initialTradeData && !initialTradeData.sellerName) {
         setInitialTradeData(prev => ({...prev!, sellerName: foundSeller.name}));
       }
-
     } else {
         setAsset(null);
         setSeller(null);
     }
     setIsLoadingAssetSeller(false);
-  }, [assetId, sellerId, initialTradeData, isInitialTradeDataLoaded]);
+  }, [assetIdParam, sellerIdParam, initialTradeData, isInitialTradeDataLoaded]);
 
 
-  useEffect(() => { // Step 3: Setup initial messages
-    if (isLoadingAssetSeller || !isInitialTradeDataLoaded || !initialTradeData || !asset || !seller) return;
+  useEffect(() => {
+    if (isLoadingAssetSeller || !isInitialTradeDataLoaded) return;
+
+    // Proceed even if asset/seller/initialTradeData is null, using defaults later in rendering
+    const currentOrderId = initialTradeData?.orderId || `err_${Date.now()}`;
+    const currentFiatAmount = initialTradeData?.fiatAmount || '0';
+    const currentFiatCurrency = initialTradeData?.fiatCurrency || 'USD';
 
     const newMessages: Message[] = [
       { id: 'sys_welcome', type: 'welcome_banner', sender: 'system-banner', text: "Welcome to the new Chatroom. " },
       { id: 'sys_divider', type: 'new_messages_divider', sender: 'system-banner', text: "New order messages" },
       {
         id: 'sys_order_created', type: 'order_created_banner', sender: 'system-banner',
-        orderId: initialTradeData.orderId, fiatAmount: initialTradeData.fiatAmount, fiatCurrency: initialTradeData.fiatCurrency,
-        text: `Order (${initialTradeData.orderId}) created. Please complete the payment and mark the order as paid in time, or the order will be canceled.`,
+        orderId: currentOrderId, fiatAmount: currentFiatAmount, fiatCurrency: currentFiatCurrency,
+        text: `Order (${currentOrderId}) created. Please complete the payment and mark the order as paid in time, or the order will be canceled.`,
       },
       {
         id: 'seller_instr_1', sender: 'other', timestamp: new Date(), type: 'seller_instructions',
@@ -178,7 +176,7 @@ function ChatPageContent() {
       }
     ];
     setMessages(newMessages);
-  }, [isLoadingAssetSeller, isInitialTradeDataLoaded, initialTradeData, asset, seller, payWithinTimer]);
+  }, [isLoadingAssetSeller, isInitialTradeDataLoaded, initialTradeData, asset, seller]);
 
   const handleSendMessage = (e: FormEvent) => {
     e.preventDefault();
@@ -195,31 +193,21 @@ function ChatPageContent() {
       ]);
     }, 1000);
   };
-  
+
   if (!isInitialTradeDataLoaded || isLoadingAssetSeller) {
     return <div className="flex h-screen items-center justify-center bg-background">Loading chat...</div>;
   }
 
-  if (!asset || !seller || !initialTradeData) {
-    return (
-      <div className="flex flex-col min-h-screen items-center justify-center p-4 bg-background">
-         <Button variant="outline" className="mb-6 self-start sm:self-center" onClick={() => router.back()}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        <Alert variant="destructive" className="w-full max-w-md">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Error Loading Chat</AlertTitle>
-          <AlertDescription>
-            Chat data could not be loaded. Asset, seller, or trade details might be missing or invalid. Please try navigating back and selecting a trade again.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-  
-  const sellerAvatarInitial = (initialTradeData.sellerName || seller.name).charAt(0).toUpperCase();
-  const fiatAmountNum = parseFloat(initialTradeData.fiatAmount || '0');
-  const formattedFiat = formatFiatDisplay(fiatAmountNum, initialTradeData.fiatCurrency || 'USD', locale);
+  const isDataMissing = !asset || !seller || !initialTradeData;
+
+  const displaySellerName = initialTradeData?.sellerName || seller?.name || "Seller";
+  const displaySellerAvatarInitial = (initialTradeData?.sellerName || seller?.name || "S").charAt(0).toUpperCase();
+  const displayTradeType = initialTradeData?.tradeType || 'buy';
+  const displayCryptoAssetSymbol = initialTradeData?.cryptoAssetSymbol || 'CRYPTO';
+  const displayFiatAmountNum = parseFloat(initialTradeData?.fiatAmount || '0');
+  const displayFiatCurrency = initialTradeData?.fiatCurrency || 'USD';
+
+  const formattedFiat = formatFiatDisplay(displayFiatAmountNum, displayFiatCurrency, locale);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -229,11 +217,11 @@ function ChatPageContent() {
         </Button>
         <div className="flex items-center space-x-2">
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="text-sm bg-primary/20 text-primary">{sellerAvatarInitial}</AvatarFallback>
+            <AvatarFallback className="text-sm bg-primary/20 text-primary">{displaySellerAvatarInitial}</AvatarFallback>
           </Avatar>
           <div>
             <div className="flex items-center">
-              <p className="font-semibold text-sm">{initialTradeData.sellerName || seller.name}</p>
+              <p className="font-semibold text-sm">{displaySellerName}</p>
               <ShieldCheck className="ml-1 h-3.5 w-3.5 text-yellow-500 fill-yellow-500/30" />
             </div>
             <p className="text-xs text-muted-foreground">Last seen 1 min(s) ago</p>
@@ -247,7 +235,7 @@ function ChatPageContent() {
       <div className="sticky top-[60px] z-10 flex items-center justify-between p-3 border-b bg-background shadow-sm">
         <div>
           <p className="text-sm font-medium">
-            {initialTradeData.tradeType === 'buy' ? 'Buy' : 'Sell'} {initialTradeData.cryptoAssetSymbol} with {formattedFiat}
+            {displayTradeType === 'buy' ? 'Buy' : 'Sell'} {displayCryptoAssetSymbol} with {formattedFiat}
           </p>
           <p className="text-xs text-orange-500">Pay within {payWithinTimer}</p>
         </div>
@@ -256,7 +244,19 @@ function ChatPageContent() {
         </Button>
       </div>
 
-      <ScrollArea ref={scrollAreaRef} className="flex-grow p-4 bg-muted/20">
+      {isDataMissing && (
+        <div className="p-4 sticky top-[120px] z-10">
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Chat Data Incomplete</AlertTitle>
+                <AlertDescription>
+                    Some information for this chat is missing. The chat may not be fully functional. Displaying with placeholder data.
+                </AlertDescription>
+            </Alert>
+        </div>
+      )}
+
+      <ScrollArea ref={scrollAreaRef} className={cn("flex-grow p-4 bg-muted/20", isDataMissing && "pt-0")}>
         <div className="space-y-4">
           {messages.map(msg => {
             if (msg.type === 'welcome_banner') {
@@ -289,7 +289,7 @@ function ChatPageContent() {
               return (
                 <div key={msg.id} className="flex items-end space-x-2">
                   <Avatar className="h-7 w-7 self-start shrink-0">
-                    <AvatarFallback className="text-xs bg-muted text-muted-foreground">{sellerAvatarInitial}</AvatarFallback>
+                    <AvatarFallback className="text-xs bg-muted text-muted-foreground">{displaySellerAvatarInitial}</AvatarFallback>
                   </Avatar>
                   <div className="p-3 rounded-lg bg-card shadow-sm max-w-[80%]">
                     <p className="font-semibold text-sm mb-1">{title}</p>
@@ -318,11 +318,11 @@ function ChatPageContent() {
               >
                 {msg.sender === 'other' && (
                   <Avatar className="h-7 w-7 self-start shrink-0">
-                    <AvatarFallback className="text-xs bg-muted text-muted-foreground">{sellerAvatarInitial}</AvatarFallback>
+                    <AvatarFallback className="text-xs bg-muted text-muted-foreground">{displaySellerAvatarInitial}</AvatarFallback>
                   </Avatar>
                 )}
                 <div
-                  className={cn("p-2.5 rounded-lg max-w-[75%] shadow-sm", 
+                  className={cn("p-2.5 rounded-lg max-w-[75%] shadow-sm",
                     msg.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card'
                   )}
                 >
@@ -372,7 +372,3 @@ export default function ChatPage() {
     </Suspense>
   )
 }
-    
-
-    
-
