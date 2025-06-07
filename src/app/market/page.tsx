@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { mockP2POffers, mockCurrencies, mockPaymentMethods, depositableAssets } from '@/data/mock';
 import type { P2POffer, Currency, PaymentMethod, DepositableAsset } from '@/types';
 import { Info, Diamond, SlidersHorizontal, Bell, Filter, ChevronDown } from 'lucide-react';
+import { P2PTradeModal } from '@/components/app/p2p-trade-modal'; // Import the new modal
 
 // Helper to get unique crypto assets from offers for the filter
 const getAvailableCryptoAssets = (offers: P2POffer[]): DepositableAsset[] => {
@@ -42,6 +43,9 @@ export default function MarketPage() {
 
   const [locale, setLocale] = useState<string | undefined>(undefined);
 
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+  const [selectedOfferForModal, setSelectedOfferForModal] = useState<P2POffer | null>(null);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setLocale(navigator.language);
@@ -59,6 +63,11 @@ export default function MarketPage() {
   }, [selectedFiatCurrency, selectedCryptoAsset, /* selectedAmountRange, selectedPaymentMethod, tradeType */]);
 
   const currentFiatCurrencyDetails = mockCurrencies.find(c => c.id === selectedFiatCurrency);
+
+  const handleInitiateTrade = (offer: P2POffer) => {
+    setSelectedOfferForModal(offer);
+    setIsTradeModalOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -186,6 +195,7 @@ export default function MarketPage() {
                 offer={offer} 
                 locale={locale} 
                 tradeType={tradeType}
+                onInitiateTrade={handleInitiateTrade} // Pass the handler
               />
             ))
           ) : (
@@ -196,6 +206,15 @@ export default function MarketPage() {
         </div>
       </main>
       <BottomNavigationBar />
+      {selectedOfferForModal && (
+        <P2PTradeModal
+          isOpen={isTradeModalOpen}
+          onOpenChange={setIsTradeModalOpen}
+          offer={selectedOfferForModal}
+          tradeType={tradeType}
+          locale={locale}
+        />
+      )}
     </div>
   );
 }

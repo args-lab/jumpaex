@@ -12,6 +12,7 @@ interface P2POfferCardProps {
   offer: P2POffer;
   locale: string | undefined;
   tradeType: 'buy' | 'sell';
+  onInitiateTrade: (offer: P2POffer) => void; // New prop
 }
 
 const formatFiat = (value: number, currencySymbol: string, locale: string | undefined, fractionDigits = 0) => {
@@ -22,7 +23,7 @@ const formatNumber = (value: number, locale: string | undefined, fractionDigits 
   return value.toLocaleString(locale, { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits });
 };
 
-export function P2POfferCard({ offer, locale, tradeType }: P2POfferCardProps) {
+export function P2POfferCard({ offer, locale, tradeType, onInitiateTrade }: P2POfferCardProps) {
   const fiatSymbol = offer.fiatCurrency === 'IDR' ? 'Rp ' : (offer.fiatCurrency === 'USD' ? '$' : `${offer.fiatCurrency} `);
 
   return (
@@ -86,7 +87,7 @@ export function P2POfferCard({ offer, locale, tradeType }: P2POfferCardProps) {
           <Button 
             size="sm" 
             className="mt-2 w-full h-8 text-xs bg-accent hover:bg-accent/90 text-accent-foreground"
-            // onClick={() => { /* TODO: Implement trade proposal modal */ }}
+            onClick={() => onInitiateTrade(offer)}
           >
             {tradeType === 'buy' ? 'Buy' : 'Sell'}
           </Button>

@@ -346,6 +346,16 @@ export const mockPaymentMethods: PaymentMethod[] = [
   { id: 'paypal', name: 'PayPal', icon: CreditCard },
 ];
 
+const defaultAdvertiserRequirements = `Jika iklan tersedia berarti Online dan ready.
+Order akan di release saat dana sudah diterima di rekening.
+Mohon untuk klik tombol "sudah dibayar", jika sudah melakukan pembayaran.
+Terima kasih.
+========================
+If you see this ads, that means i am online and ready to serve.
+Order will be released ASAP when the fund arrived on my account.
+Please click "Transferred" button once you've done transferring the fund to me.
+Thank you and happy trading :)`;
+
 export const mockP2POffers: P2POffer[] = [
   {
     id: 'p2p_offer_1',
@@ -365,6 +375,7 @@ export const mockP2POffers: P2POffer[] = [
     avgCompletionTimeMinutes: 15,
     tags: ['Verification'],
     isPromoted: true,
+    advertiserRequirements: defaultAdvertiserRequirements,
   },
   {
     id: 'p2p_offer_2',
@@ -382,6 +393,7 @@ export const mockP2POffers: P2POffer[] = [
     availableCrypto: 268.81,
     paymentMethods: ['DANA (Indonesia)'],
     avgCompletionTimeMinutes: 15,
+    advertiserRequirements: defaultAdvertiserRequirements,
   },
   {
     id: 'p2p_offer_3',
@@ -400,6 +412,7 @@ export const mockP2POffers: P2POffer[] = [
     paymentMethods: ['BCA', 'Blu', 'Allo Bank', 'Bank Transfer', 'DANA (Indonesia)'],
     avgCompletionTimeMinutes: 15,
     tags: ['Verification'],
+    advertiserRequirements: "Fast trades only. Please be ready to complete within 5 minutes.",
   },
   {
     id: 'p2p_offer_4',
@@ -417,6 +430,7 @@ export const mockP2POffers: P2POffer[] = [
     availableCrypto: 1500.75,
     paymentMethods: ['Wise', 'Revolut'],
     avgCompletionTimeMinutes: 10,
+    advertiserRequirements: "Welcome! Please provide your Wise/Revolut details clearly. GMT business hours preferred.",
   },
   {
     id: 'p2p_offer_5',
@@ -435,5 +449,6 @@ export const mockP2POffers: P2POffer[] = [
     paymentMethods: ['Bank Transfer', 'PayPal'],
     avgCompletionTimeMinutes: 5,
     tags: ['Verification'],
+    advertiserRequirements: "SEPA transfers and PayPal F&F only. Expect quick release.",
   },
 ];

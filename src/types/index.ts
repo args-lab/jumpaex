@@ -100,4 +100,5 @@ export interface P2POffer {
   avgCompletionTimeMinutes: number; // e.g., 15
   isPromoted?: boolean; // For the "New P2P User Trading Zone" or other highlights
   tags?: string[]; // e.g., ["Verification"]
+  advertiserRequirements?: string; // Added for the new modal
 }
