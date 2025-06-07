@@ -94,18 +94,27 @@ const formatBalanceDisplay = (amount: number, assetSymbol: string, locale: strin
 };
 
 const formatFiatValue = (value: number, currencyCode: string = 'USD', locale: string | undefined, options?: Intl.NumberFormatOptions) => {
-  const defaultOptions: Intl.NumberFormatOptions = {
-    style: 'currency',
-    currency: currencyCode,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    ...options,
+  let minDigits = options?.minimumFractionDigits !== undefined ? options.minimumFractionDigits : 2;
+  let maxDigits = options?.maximumFractionDigits !== undefined ? options.maximumFractionDigits : 2;
+
+  if (minDigits > maxDigits) {
+    maxDigits = minDigits;
+  }
+
+  const formattingOptions: Intl.NumberFormatOptions = {
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: maxDigits,
   };
+
   try {
-    return value.toLocaleString(locale, defaultOptions);
-  } catch (e) { // Fallback for unknown currency codes
+    return value.toLocaleString(locale, {
+        ...formattingOptions,
+        style: 'currency',
+        currency: currencyCode,
+    });
+  } catch (e) { 
     const symbol = mockCurrencies.find(c => c.id.toUpperCase() === currencyCode.toUpperCase())?.symbol || currencyCode;
-    return `${symbol}${value.toLocaleString(locale, { minimumFractionDigits: defaultOptions.minimumFractionDigits, maximumFractionDigits: defaultOptions.maximumFractionDigits })}`;
+    return `${symbol}${value.toLocaleString(locale, formattingOptions)}`;
   }
 };
 
@@ -114,10 +123,9 @@ const getIconForSymbol = (symbol: string): LucideIcon | string | undefined => {
     const asset = depositableAssets.find(da => da.symbol.toUpperCase() === upperSymbol) || mockAssets.find(ma => ma.name.toUpperCase() === upperSymbol || ma.id.toUpperCase() === upperSymbol);
     if (asset?.icon) return asset.icon;
     
-    // Fallback for image example specific icons not in current mock data
-    if (upperSymbol === 'MOVE') return 'https://placehold.co/32x32.png'; // Placeholder
-    if (upperSymbol === 'SEI') return 'https://placehold.co/32x32.png'; // Placeholder
-    if (upperSymbol === 'BTTC') return 'https://placehold.co/32x32.png'; // Placeholder
+    if (upperSymbol === 'MOVE') return 'https://placehold.co/32x32.png'; 
+    if (upperSymbol === 'SEI') return 'https://placehold.co/32x32.png'; 
+    if (upperSymbol === 'BTTC') return 'https://placehold.co/32x32.png'; 
     if (['USD', 'EUR', 'GBP', 'JPY'].includes(upperSymbol)) return DollarSign;
     return HelpCircle;
 };
@@ -163,14 +171,13 @@ export default function AssetsPage() {
       }
     });
     
-    // Add assets from image not in transactions, with mock data
     const imageAssets = ['ETH', 'MOVE', 'SEI', 'USDT', 'BNB', 'BTTC'];
     imageAssets.forEach(imgSymbol => {
         const upperImgSymbol = imgSymbol.toUpperCase();
         if (!calculatedAssetBalances[upperImgSymbol]) {
             const da = depositableAssets.find(d => d.symbol.toUpperCase() === upperImgSymbol);
             calculatedAssetBalances[upperImgSymbol] = {
-                totalAmount: 0, // Will be mocked
+                totalAmount: 0, 
                 name: da?.name || upperImgSymbol,
                 isFiat: false,
             };
@@ -182,18 +189,17 @@ export default function AssetsPage() {
 
     const formattedAssets = Object.entries(calculatedAssetBalances)
       .map(([symbol, assetData]) => {
-        const priceInUSD = getAssetPriceInUSD(symbol) || (symbol === 'USDT' ? 1 : 0); // Ensure USDT has a price
+        const priceInUSD = getAssetPriceInUSD(symbol) || (symbol === 'USDT' ? 1 : 0); 
         
-        // Mock specific balances from image for better visual match
         let currentBalance = assetData.totalAmount;
-        let mockAvgCost = priceInUSD * (1 - (Math.random() * 0.1 - 0.05)); // +/- 5% of current price
-        let mockPnlPerc = (Math.random() * 10 - 5); // +/- 5%
+        let mockAvgCost = priceInUSD * (1 - (Math.random() * 0.1 - 0.05)); 
+        let mockPnlPerc = (Math.random() * 10 - 5); 
 
         if (symbol === 'ETH') { currentBalance = 0.00006193; mockAvgCost = 2199.77; mockPnlPerc = 1.92;}
-        else if (symbol === 'MOVE') { currentBalance = 0.0784; mockAvgCost = 0.46347305 / 0.0784 ; mockPnlPerc = 4.97;} // Approx from image
-        else if (symbol === 'SEI') { currentBalance = 0.01415186; mockAvgCost = 0.22215441 / 0.01415186; mockPnlPerc = 3.97;} // Approx
+        else if (symbol === 'MOVE') { currentBalance = 0.0784; mockAvgCost = 0.46347305 / 0.0784 ; mockPnlPerc = 4.97;} 
+        else if (symbol === 'SEI') { currentBalance = 0.01415186; mockAvgCost = 0.22215441 / 0.01415186; mockPnlPerc = 3.97;} 
         else if (symbol === 'USDT') { currentBalance = 0.0003138; mockAvgCost = 1; mockPnlPerc = 0.00; }
-        else if (symbol === 'BNB') { currentBalance = 0.00000019; mockAvgCost = 367.27 / (0.00000019 * (getAssetPriceInUSD('BNB') || 580) / (getAssetPriceInUSD('BNB') || 580)); mockPnlPerc = 1.48; } // Complicated example from image, simplified
+        else if (symbol === 'BNB') { currentBalance = 0.00000019; mockAvgCost = 367.27 / (0.00000019 * (getAssetPriceInUSD('BNB') || 580) / (getAssetPriceInUSD('BNB') || 580)); mockPnlPerc = 1.48; } 
         else if (symbol === 'BTTC') { currentBalance = 0.50; mockAvgCost = 0.00000149 / 0.50; mockPnlPerc = 1.47; }
 
 
@@ -212,18 +218,18 @@ export default function AssetsPage() {
           pnlPercentage: mockPnlPerc,
           isFiat: assetData.isFiat,
           formattedBalance: formatBalanceDisplay(currentBalance, symbol, locale),
-          formattedValueUSD: formatFiatValue(valueUSD, 'USD', locale, {minimumFractionDigits: valueUSD < 0.01 ? 8:2}),
+          formattedValueUSD: formatFiatValue(valueUSD, 'USD', locale, {minimumFractionDigits: valueUSD < 0.01 && valueUSD !== 0 ? 8 : 2}),
           formattedAverageCostUSD: mockAvgCost ? formatFiatValue(mockAvgCost, 'USD', locale) : '-',
           formattedPnl: `${pnlTotalUSD >= 0 ? '+' : ''}${formatFiatValue(pnlTotalUSD, 'USD', locale, {minimumFractionDigits:0, maximumFractionDigits:0})} (${pnlTotalUSD >= 0 ? '+' : ''}${mockPnlPerc.toFixed(2)}%)`,
         };
       })
-      .filter(asset => asset.balance > 0 || asset.isFiat || imageAssets.includes(asset.symbol)) // Keep if has balance, is fiat, or in image list
-      .sort((a, b) => b.valueUSD - a.valueUSD); // Sort by value
+      .filter(asset => asset.balance > 0 || asset.isFiat || imageAssets.includes(asset.symbol)) 
+      .sort((a, b) => b.valueUSD - a.valueUSD); 
       
     setUserAssets(formattedAssets);
     setTotalPortfolioValueUSD(runningTotalPortfolioValueUSD);
-    // Mock total PNL based on portfolio value
-    const mockTotalPnlPercentage = 2.12; // from image
+    
+    const mockTotalPnlPercentage = 2.12; 
     setTotalPnlTodayPercentage(mockTotalPnlPercentage);
     setTotalPnlTodayUSD(runningTotalPortfolioValueUSD * (mockTotalPnlPercentage / 100));
     setIsLoading(false);
@@ -261,7 +267,7 @@ export default function AssetsPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 pt-6 pb-24">
-        {/* Total Balance Section */}
+        
         <div className="mb-4">
           <div className="flex items-center text-sm text-muted-foreground mb-1">
             Total Balance <Eye className="ml-2 h-4 w-4" />
@@ -284,7 +290,7 @@ export default function AssetsPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        
         <div className="grid grid-cols-3 gap-3 mb-4">
           <Button className="bg-accent hover:bg-accent/90 text-accent-foreground h-11" asChild>
             <Link href="/wallet">Add Funds</Link>
@@ -293,7 +299,7 @@ export default function AssetsPage() {
           <Button variant="outline" className="h-11 text-muted-foreground border-input bg-card hover:bg-muted/50">Transfer</Button>
         </div>
 
-        {/* Convert Low-Value Assets */}
+        
         <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:bg-muted/20 px-2 py-3 mb-6">
           <Coins className="mr-2 h-5 w-5 text-yellow-500" />
           Convert Low-Value Assets to BNB
@@ -301,7 +307,7 @@ export default function AssetsPage() {
 
         <Separator className="mb-4"/>
 
-        {/* Balances Header */}
+        
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-xl font-semibold">Balances</h2>
           <div className="flex items-center space-x-2">
@@ -314,7 +320,7 @@ export default function AssetsPage() {
           </div>
         </div>
 
-        {/* Asset List */}
+        
         <div className="space-y-1">
           {userAssets.map((asset) => (
             <div key={asset.symbol} className="flex items-center py-3 px-1 hover:bg-muted/10 rounded-md">
@@ -361,3 +367,6 @@ export default function AssetsPage() {
     </div>
   );
 }
+
+
+    
