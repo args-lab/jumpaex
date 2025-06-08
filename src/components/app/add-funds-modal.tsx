@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogTitle, // Added for accessibility
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -64,11 +65,13 @@ export function AddFundsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 flex flex-col h-full sm:h-auto sm:max-h-[95vh] bg-muted/20"> {/* Changed background to muted/20 for less stark white */}
+      <DialogContent className="sm:max-w-md p-0 flex flex-col h-full sm:h-auto sm:max-h-[95vh] bg-background"> {/* Changed background to bg-background */}
         <DialogHeader className="flex flex-row items-center justify-between p-3 border-b sticky top-0 bg-background z-10">
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          {/* Visually hidden title for accessibility */}
+          <DialogTitle className="sr-only">Add Funds Options</DialogTitle>
           <Button variant="outline" size="sm" className="text-xs h-8 px-2.5 bg-card hover:bg-card/90 border-border">
             <div className="flex items-center justify-center h-5 w-5 mr-1.5 rounded-full bg-red-600 text-white text-[9px] font-semibold leading-none">
               Rp
