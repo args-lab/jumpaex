@@ -489,7 +489,7 @@ export const mockMarketAssets: MarketAsset[] = [
 ];
 
 // Helper to format market prices for display
-export const formatMarketPrice = (price: number, quoteAsset: string, priceUSD: number, locale: string | undefined) => {
+export const formatMarketPrice = (price: number, quoteAsset: string, priceUSD: number, clientLocale: string | undefined) => {
   let priceDigits = 2;
   if (quoteAsset === 'BTC') {
     priceDigits = 8; // For BTC pairs like ZK/BTC
@@ -499,15 +499,19 @@ export const formatMarketPrice = (price: number, quoteAsset: string, priceUSD: n
     priceDigits = 4;
   }
 
-  const mainPriceFormatted = price.toLocaleString(locale, {
-    minimumFractionDigits: priceDigits,
-    maximumFractionDigits: priceDigits,
-  });
+  const mainPriceFormatted = clientLocale
+    ? price.toLocaleString(clientLocale, {
+        minimumFractionDigits: priceDigits,
+        maximumFractionDigits: priceDigits,
+      })
+    : price.toFixed(priceDigits); // Fallback for SSR/initial client render
 
-  const usdPriceFormatted = priceUSD.toLocaleString(locale, {
-    minimumFractionDigits: 2, // USD always 2-4 for small values
-    maximumFractionDigits: priceUSD < 0.01 ? 4 : 2,
-  });
+  const usdPriceFormatted = clientLocale
+    ? priceUSD.toLocaleString(clientLocale, {
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: priceUSD < 0.01 && priceUSD !== 0 ? 4 : 2,
+      })
+    : priceUSD.toFixed(priceUSD < 0.01 && priceUSD !== 0 ? 4 : 2); // Fallback for SSR/initial client render
 
   return { mainPriceFormatted, usdPriceFormatted };
 };
