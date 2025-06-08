@@ -3,7 +3,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { DepositModal } from '@/components/app/deposit-modal';
+import { AddFundsModal } from '@/components/app/add-funds-modal'; // Changed import
+import { DepositModal } from '@/components/app/deposit-modal'; // Keep original deposit modal
 import {
   Table,
   TableBody,
@@ -19,6 +20,8 @@ import { mockMarketAssets, formatMarketPrice } from '@/data/mock';
 import type { MarketAsset } from '@/types';
 import { Gift, PiggyBank, Users, Trophy, LayoutGrid, ChevronDown, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
 
 const iconMenuItems = [
   { label: 'Rewards Hub', icon: Gift, href: '#' },
@@ -44,15 +47,17 @@ const subMarketTabs = [
   { value: 'spot', label: 'Spot' },
   { value: 'futures', label: 'Futures' },
   { value: 'options', label: 'Options' },
-  { value: 'alpha_sub', label: 'Alpha' }, // Renamed to avoid conflict with main tab value
+  { value: 'alpha_sub', label: 'Alpha' }, 
 ];
 
 export default function HomePage() {
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false);
+  const [isActualDepositCryptoModalOpen, setIsActualDepositCryptoModalOpen] = useState(false);
   const [totalBalanceUSD, setTotalBalanceUSD] = useState<string | null>(null);
   const [activeMainTab, setActiveMainTab] = useState('favorites');
   const [activeSubTab, setActiveSubTab] = useState('all');
   const [locale, setLocale] = useState<string | undefined>(undefined);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -72,6 +77,25 @@ export default function HomePage() {
     return mockMarketAssets;
   }, [activeMainTab, activeSubTab]);
 
+  const handleOpenActualDepositModal = () => {
+    setIsAddFundsModalOpen(false); // Close the AddFundsModal
+    setIsActualDepositCryptoModalOpen(true); // Open the actual DepositCryptoModal
+  };
+
+  // Placeholder navigation/action handlers
+  const handleNavigateToP2P = () => {
+    toast({ title: 'Navigate', description: 'Redirecting to P2P page (mock)...' });
+    setIsAddFundsModalOpen(false);
+  };
+  const handleNavigateToBuyWithFiat = () => {
+    toast({ title: 'Navigate', description: 'Redirecting to Buy with Fiat page (mock)...' });
+    setIsAddFundsModalOpen(false);
+  };
+  const handleNavigateToReceive = () => {
+    toast({ title: 'Navigate', description: 'Redirecting to Receive via Pay page (mock)...' });
+    setIsAddFundsModalOpen(false);
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -89,7 +113,7 @@ export default function HomePage() {
           </div>
           <Button
             className="bg-accent hover:bg-accent/90 text-accent-foreground h-9 px-4 text-sm"
-            onClick={() => setIsDepositModalOpen(true)}
+            onClick={() => setIsAddFundsModalOpen(true)}
           >
             Add Funds
           </Button>
@@ -190,7 +214,15 @@ export default function HomePage() {
           </Table>
         </div>
       </main>
-      <DepositModal isOpen={isDepositModalOpen} onOpenChange={setIsDepositModalOpen} />
+      <AddFundsModal 
+        isOpen={isAddFundsModalOpen} 
+        onOpenChange={setIsAddFundsModalOpen}
+        onNavigateToP2P={handleNavigateToP2P}
+        onNavigateToBuyWithFiat={handleNavigateToBuyWithFiat}
+        onNavigateToReceive={handleNavigateToReceive}
+        onOpenDepositCryptoModal={handleOpenActualDepositModal}
+      />
+      <DepositModal isOpen={isActualDepositCryptoModalOpen} onOpenChange={setIsActualDepositCryptoModalOpen} />
       {/* BottomNavigationBar is in RootLayout and will appear below this main content */}
     </div>
   );
