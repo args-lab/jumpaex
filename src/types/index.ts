@@ -102,3 +102,13 @@ export interface P2POffer {
   tags?: string[]; // e.g., ["Verification"]
   advertiserRequirements?: string; // Added for the new modal
 }
+
+export interface MarketAsset {
+  id: string;
+  pair: string; // e.g., "ZK/BTC"
+  baseAsset: string; // e.g. "ZK"
+  quoteAsset: string; // e.g. "BTC"
+  lastPrice: number; // Price in terms of quoteAsset
+  lastPriceUSD: number; // USD equivalent of lastPrice
+  change24h: number; // Percentage
+}

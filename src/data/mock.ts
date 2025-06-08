@@ -1,5 +1,5 @@
 
-import type { Asset, Region, Currency, BlockchainNetwork, Transaction, WalletTransaction, DepositableAsset, MockSeller, PaymentMethod, P2POffer } from '@/types';
+import type { Asset, Region, Currency, BlockchainNetwork, Transaction, WalletTransaction, DepositableAsset, MockSeller, PaymentMethod, P2POffer, MarketAsset } from '@/types';
 import { Bitcoin, Landmark, Waves, CircleDollarSign, Replace, DollarSign, ShieldCheck, Clock, Banknote, CreditCard } from 'lucide-react';
 
 export const mockRegions: Region[] = [
@@ -478,3 +478,36 @@ export const mockP2POffers: P2POffer[] = [
     advertiserRequirements: "SEPA transfers and PayPal F&F only. Expect quick release.",
   },
 ];
+
+export const mockMarketAssets: MarketAsset[] = [
+  { id: 'zk_btc', pair: 'ZK/BTC', baseAsset: 'ZK', quoteAsset: 'BTC', lastPrice: 0.00000051, lastPriceUSD: 0.0536, change24h: -1.92 },
+  { id: 'zk_usdt', pair: 'ZK/USDT', baseAsset: 'ZK', quoteAsset: 'USDT', lastPrice: 0.0536, lastPriceUSD: 0.0536, change24h: -0.74 },
+  { id: 'btc_usdt', pair: 'BTC/USDT', baseAsset: 'BTC', quoteAsset: 'USDT', lastPrice: 105420.00, lastPriceUSD: 105420.00, change24h: 0.71 },
+  { id: 'eth_usdt', pair: 'ETH/USDT', baseAsset: 'ETH', quoteAsset: 'USDT', lastPrice: 2509.60, lastPriceUSD: 2509.60, change24h: 0.97 },
+  { id: 'wan_usdt', pair: 'WAN/USDT', baseAsset: 'WAN', quoteAsset: 'USDT', lastPrice: 0.1127, lastPriceUSD: 0.1127, change24h: 1.44 },
+  { id: 'bnb_usdt', pair: 'BNB/USDT', baseAsset: 'BNB', quoteAsset: 'USDT', lastPrice: 648.91, lastPriceUSD: 648.91, change24h: 0.50 },
+];
+
+// Helper to format market prices for display
+export const formatMarketPrice = (price: number, quoteAsset: string, priceUSD: number, locale: string | undefined) => {
+  let priceDigits = 2;
+  if (quoteAsset === 'BTC') {
+    priceDigits = 8; // For BTC pairs like ZK/BTC
+  } else if (price < 0.001 && price !== 0) {
+    priceDigits = 6;
+  } else if (price < 1 && price !== 0) {
+    priceDigits = 4;
+  }
+
+  const mainPriceFormatted = price.toLocaleString(locale, {
+    minimumFractionDigits: priceDigits,
+    maximumFractionDigits: priceDigits,
+  });
+
+  const usdPriceFormatted = priceUSD.toLocaleString(locale, {
+    minimumFractionDigits: 2, // USD always 2-4 for small values
+    maximumFractionDigits: priceUSD < 0.01 ? 4 : 2,
+  });
+
+  return { mainPriceFormatted, usdPriceFormatted };
+};
