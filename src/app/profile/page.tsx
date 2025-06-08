@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react'; // Added React import
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
