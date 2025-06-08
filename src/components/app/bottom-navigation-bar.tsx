@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, ArrowLeftRight, User, WalletCards, Store, Repeat } from 'lucide-react'; // Added Repeat for Convert
+import { Home, Store, Repeat, WalletCards } from 'lucide-react'; // Removed User icon
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -13,9 +13,9 @@ export function BottomNavigationBar() {
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/market', label: 'Market', icon: Store },
-    { href: '/convert', label: 'Convert', icon: Repeat }, // Changed from Trades to Convert
+    { href: '/convert', label: 'Convert', icon: Repeat },
     { href: '/assets', label: 'Assets', icon: WalletCards },
-    { href: '/account', label: 'Account', icon: User },
+    // { href: '/account', label: 'Account', icon: User }, // Removed Account
   ];
 
   return (
