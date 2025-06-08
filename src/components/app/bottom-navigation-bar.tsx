@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Store, Repeat, WalletCards, User } from 'lucide-react'; // Added User icon
+import { Home, Store, Repeat, WalletCards, User, Link as LinkIcon } from 'lucide-react'; // Added LinkIcon
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,8 @@ export function BottomNavigationBar() {
     { href: '/market', label: 'Market', icon: Store },
     { href: '/convert', label: 'Convert', icon: Repeat },
     { href: '/assets', label: 'Assets', icon: WalletCards },
-    { href: '/profile', label: 'Profile', icon: User }, // Added Profile
+    { href: '/connect', label: 'Connect', icon: LinkIcon }, // Added Connect
+    { href: '/profile', label: 'Profile', icon: User },
   ];
 
   return (
