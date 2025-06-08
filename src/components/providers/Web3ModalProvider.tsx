@@ -34,7 +34,7 @@ createWeb3Modal({
   wagmiConfig,
   projectId,
   chains,
-  enableAnalytics: true, // Optional - defaults to your Cloud configuration
+  enableAnalytics: false, // Optional - defaults to your Cloud configuration - Set to false to stop 403 errors
   themeMode: 'light', // Optional: 'light' | 'dark' | 'system'
   // You can add more theme variables here to customize colors, fonts, etc.
   // Refer to Web3Modal documentation for available theme variables.
