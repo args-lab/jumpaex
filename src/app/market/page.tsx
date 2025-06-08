@@ -33,10 +33,10 @@ const getAvailableCryptoAssets = (offers: P2POffer[]): DepositableAsset[] => {
 export default function MarketPage() {
   const [selectedFiatCurrency, setSelectedFiatCurrency] = useState<string>(mockCurrencies.find(c => c.id === 'idr')?.id || mockCurrencies[0].id);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
-  
+
   const availableCryptoAssets = useMemo(() => getAvailableCryptoAssets(mockP2POffers), []);
   const [selectedCryptoAsset, setSelectedCryptoAsset] = useState<string>(availableCryptoAssets[0]?.symbol || 'USDT');
-  
+
   // Placeholder states for other filters - functionality to be fully implemented later
   const [selectedAmountRange, setSelectedAmountRange] = useState<string>('all');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('all');
@@ -68,6 +68,10 @@ export default function MarketPage() {
     setSelectedOfferForModal(offer);
     setIsTradeModalOpen(true);
   };
+
+  const TriggerIconDetails = depositableAssets.find(da => da.symbol === selectedCryptoAsset);
+  const TriggerIconComponent = TriggerIconDetails?.icon;
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -126,31 +130,34 @@ export default function MarketPage() {
             </Button>
           </div>
         </div>
-        
+
         {/* Filter Controls: Asset, Amount, Payment */}
         <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
           <Select value={selectedCryptoAsset} onValueChange={setSelectedCryptoAsset}>
             <SelectTrigger className="h-9 text-xs">
               <div className="flex items-center">
-                {depositableAssets.find(da => da.symbol === selectedCryptoAsset)?.icon && typeof depositableAssets.find(da => da.symbol === selectedCryptoAsset)!.icon !== 'string' ? 
-                  React.createElement(depositableAssets.find(da => da.symbol === selectedCryptoAsset)!.icon as React.ElementType, { className: "mr-1.5 h-4 w-4 text-primary" })
+                {TriggerIconComponent && typeof TriggerIconComponent !== 'string' ?
+                  <TriggerIconComponent className="mr-1.5 h-4 w-4 text-primary" />
                   : <Diamond className="mr-1.5 h-4 w-4 text-primary" />
                 }
                 <SelectValue placeholder="Asset" />
               </div>
             </SelectTrigger>
             <SelectContent>
-              {availableCryptoAssets.map(asset => (
-                <SelectItem key={asset.id} value={asset.symbol} className="text-xs">
-                  <div className="flex items-center">
-                    {asset.icon && typeof asset.icon !== 'string' ? 
-                      React.createElement(asset.icon as React.ElementType, { className: "mr-2 h-4 w-4" })
-                       : <Diamond className="mr-2 h-4 w-4" />
-                    }
-                    {asset.symbol}
-                  </div>
-                </SelectItem>
-              ))}
+              {availableCryptoAssets.map(asset => {
+                const ItemIconComponent = asset.icon;
+                return (
+                  <SelectItem key={asset.id} value={asset.symbol} className="text-xs">
+                    <div className="flex items-center">
+                      {ItemIconComponent && typeof ItemIconComponent !== 'string' ?
+                        <ItemIconComponent className="mr-2 h-4 w-4" />
+                         : <Diamond className="mr-2 h-4 w-4" />
+                      }
+                      {asset.symbol}
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
 
@@ -185,15 +192,15 @@ export default function MarketPage() {
             New P2P User Trading Zone
           </span>
         </div>
-        
+
         {/* Offer Listings */}
         <div className="space-y-3">
           {filteredOffers.length > 0 ? (
             filteredOffers.map(offer => (
-              <P2POfferCard 
-                key={offer.id} 
-                offer={offer} 
-                locale={locale} 
+              <P2POfferCard
+                key={offer.id}
+                offer={offer}
+                locale={locale}
                 tradeType={tradeType}
                 onInitiateTrade={handleInitiateTrade} // Pass the handler
               />
