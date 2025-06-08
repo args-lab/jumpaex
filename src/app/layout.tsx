@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar'; // Added import
 
 export const metadata: Metadata = {
   title: 'AnonTrade',
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         {children}
         <Toaster />
+        <BottomNavigationBar /> {/* Added BottomNavigationBar */}
       </body>
     </html>
   );
