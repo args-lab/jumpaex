@@ -3,8 +3,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { AddFundsModal } from '@/components/app/add-funds-modal'; // Changed import
-import { DepositModal } from '@/components/app/deposit-modal'; // Keep original deposit modal
+import { AddFundsModal } from '@/components/app/add-funds-modal';
+import { DepositModal } from '@/components/app/deposit-modal';
 import {
   Table,
   TableBody,
@@ -82,11 +82,7 @@ export default function HomePage() {
     setIsActualDepositCryptoModalOpen(true); // Open the actual DepositCryptoModal
   };
 
-  // Placeholder navigation/action handlers
-  const handleNavigateToP2P = () => {
-    toast({ title: 'Navigate', description: 'Redirecting to P2P page (mock)...' });
-    setIsAddFundsModalOpen(false);
-  };
+  // Placeholder navigation/action handlers for options other than P2P
   const handleNavigateToBuyWithFiat = () => {
     toast({ title: 'Navigate', description: 'Redirecting to Buy with Fiat page (mock)...' });
     setIsAddFundsModalOpen(false);
@@ -99,7 +95,6 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Removed Header and BottomNavBar from here, they are in RootLayout */}
       <main className="flex-grow container mx-auto px-4 pt-6 pb-20">
         {/* Top Section: Balance and Add Funds */}
         <div className="flex justify-between items-start mb-6">
@@ -217,13 +212,12 @@ export default function HomePage() {
       <AddFundsModal 
         isOpen={isAddFundsModalOpen} 
         onOpenChange={setIsAddFundsModalOpen}
-        onNavigateToP2P={handleNavigateToP2P}
+        // onNavigateToP2P is handled internally by AddFundsModal now
         onNavigateToBuyWithFiat={handleNavigateToBuyWithFiat}
         onNavigateToReceive={handleNavigateToReceive}
         onOpenDepositCryptoModal={handleOpenActualDepositModal}
       />
       <DepositModal isOpen={isActualDepositCryptoModalOpen} onOpenChange={setIsActualDepositCryptoModalOpen} />
-      {/* BottomNavigationBar is in RootLayout and will appear below this main content */}
     </div>
   );
 }

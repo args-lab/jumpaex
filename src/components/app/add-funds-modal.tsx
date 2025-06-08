@@ -1,21 +1,21 @@
 
 'use client';
 
+import { useRouter } from 'next/navigation'; // Import useRouter
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle, // Added for accessibility
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Users, CreditCard, Navigation, ArrowDownToLine, ChevronRight } from 'lucide-react';
 import type * as React from 'react';
 
 interface AddFundsModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onNavigateToP2P: () => void;
+  // onNavigateToP2P: () => void; // This will be handled internally now
   onNavigateToBuyWithFiat: () => void;
   onNavigateToReceive: () => void;
   onOpenDepositCryptoModal: () => void;
@@ -47,14 +47,20 @@ const OptionCard: React.FC<OptionCardProps> = ({ icon: Icon, title, description,
 export function AddFundsModal({
   isOpen,
   onOpenChange,
-  onNavigateToP2P,
+  // onNavigateToP2P, // Removed from props
   onNavigateToBuyWithFiat,
   onNavigateToReceive,
   onOpenDepositCryptoModal,
 }: AddFundsModalProps) {
+  const router = useRouter(); // Initialize useRouter
+
+  const handleNavigateToP2P = () => {
+    router.push('/market');
+    onOpenChange(false); // Close the modal after navigation
+  };
 
   const optionsNoCrypto = [
-    { icon: Users, title: 'Buy with IDR (P2P)', description: 'Buy from users. Competitive prices. Local payments', action: onNavigateToP2P },
+    { icon: Users, title: 'Buy with IDR (P2P)', description: 'Buy from users. Competitive prices. Local payments', action: handleNavigateToP2P }, // Updated action
     { icon: CreditCard, title: 'Buy with IDR', description: 'Buy crypto easily via bank transfer, card, and more.', action: onNavigateToBuyWithFiat },
     { icon: Navigation, title: 'Receive via Pay', description: 'Receive crypto from other Binance users', action: onNavigateToReceive },
   ];
@@ -65,12 +71,11 @@ export function AddFundsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 flex flex-col h-full sm:h-auto sm:max-h-[95vh] bg-background"> {/* Changed background to bg-background */}
+      <DialogContent className="sm:max-w-md p-0 flex flex-col h-full sm:h-auto sm:max-h-[95vh] bg-background">
         <DialogHeader className="flex flex-row items-center justify-between p-3 border-b sticky top-0 bg-background z-10">
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          {/* Visually hidden title for accessibility */}
           <DialogTitle className="sr-only">Add Funds Options</DialogTitle>
           <Button variant="outline" size="sm" className="text-xs h-8 px-2.5 bg-card hover:bg-card/90 border-border">
             <div className="flex items-center justify-center h-5 w-5 mr-1.5 rounded-full bg-red-600 text-white text-[9px] font-semibold leading-none">
@@ -90,10 +95,7 @@ export function AddFundsModal({
             </div>
           </div>
 
-          {/* Separator might not be needed if background difference is subtle, but keeping for structure */}
-          {/* <Separator className="my-5 bg-border/50" />  */}
-
-          <div className="pt-2"> {/* Added padding top for visual separation if separator is removed */}
+          <div className="pt-2">
              <h2 className="text-base font-semibold mb-2.5 ml-1">I have crypto assets</h2>
             <div className="space-y-3">
               {optionsHaveCrypto.map((opt, index) => (
