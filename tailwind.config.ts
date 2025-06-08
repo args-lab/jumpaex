@@ -1,4 +1,7 @@
+
 import type {Config} from 'tailwindcss';
+
+const plugin = require('tailwindcss/plugin')
 
 export default {
   darkMode: ['class'],
@@ -95,5 +98,18 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    plugin(function({ addUtilities }: { addUtilities: Function}) {
+      addUtilities({
+        '.no-scrollbar::-webkit-scrollbar': {
+          'display': 'none',
+        },
+        '.no-scrollbar': {
+          '-ms-overflow-style': 'none',  /* IE and Edge */
+          'scrollbar-width': 'none',  /* Firefox */
+        }
+      })
+    })
+  ],
 } satisfies Config;

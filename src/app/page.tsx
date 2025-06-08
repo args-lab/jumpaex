@@ -195,22 +195,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-// Helper for no-scrollbar
-const plugin = require('tailwindcss/plugin')
-module.exports = {
-  // ...
-  plugins: [
-    plugin(function({ addUtilities }: { addUtilities: Function}) {
-      addUtilities({
-        '.no-scrollbar::-webkit-scrollbar': {
-          'display': 'none',
-        },
-        '.no-scrollbar': {
-          '-ms-overflow-style': 'none',  /* IE and Edge */
-          'scrollbar-width': 'none',  /* Firefox */
-        }
-      })
-    })
-  ]
-}
