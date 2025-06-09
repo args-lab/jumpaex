@@ -32,16 +32,6 @@ const iconMenuItems = [
   { label: 'More', icon: LayoutGrid, href: '#' },
 ];
 
-const mainMarketTabs = [
-  { value: 'favorites', label: 'Favorites' },
-  { value: 'hot', label: 'Hot' },
-  { value: 'new', label: 'New' },
-  { value: 'gainers', label: 'Gainers' },
-  { value: 'losers', label: 'Losers' },
-  { value: 'vol24h', label: '24h Vol' },
-  { value: 'marketcap', label: 'Market Cap' },
-];
-
 const subMarketTabs = [
   { value: 'all', label: 'All' },
   { value: 'blockchain_l1_l2', label: 'Blockchain L1/L2' },
@@ -53,7 +43,6 @@ export default function HomePage() {
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false);
   const [isActualDepositCryptoModalOpen, setIsActualDepositCryptoModalOpen] = useState(false);
   const [totalBalanceUSD, setTotalBalanceUSD] = useState<string | null>(null);
-  const [activeMainTab, setActiveMainTab] = useState('favorites');
   const [activeSubTab, setActiveSubTab] = useState('all');
   const [locale, setLocale] = useState<string | undefined>(undefined);
   const { toast } = useToast();
@@ -72,9 +61,9 @@ export default function HomePage() {
 
   // Filter assets based on tabs (mock implementation)
   const displayedMarketAssets = useMemo(() => {
-    // In a real app, filtering would happen here based on activeMainTab and activeSubTab
+    // In a real app, filtering would happen here based on activeSubTab
     return mockMarketAssets;
-  }, [activeMainTab, activeSubTab]);
+  }, [activeSubTab]);
 
   const handleOpenActualDepositModal = () => {
     setIsAddFundsModalOpen(false); // Close the AddFundsModal
@@ -125,42 +114,27 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Market Tabs */}
-        <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="mb-1">
+        {/* Market Sub Tabs */}
+        <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="mb-4">
           <div className="flex justify-between items-center">
             <TabsList className="bg-transparent p-0 h-auto space-x-3 overflow-x-auto no-scrollbar">
-              {mainMarketTabs.map((tab) => (
+              {subMarketTabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
                   className={cn(
-                    "text-sm font-medium text-muted-foreground hover:text-foreground pb-2 px-1 data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none",
+                    "text-xs text-muted-foreground hover:text-foreground px-2 py-1 h-7 rounded-md data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-none",
                   )}
                 >
                   {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
+             {/* Optional: Keep a menu button if there are other actions related to markets, or remove if not needed */}
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground ml-2 shrink-0">
                 <Menu className="h-5 w-5"/>
             </Button>
           </div>
-        </Tabs>
-
-        <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="mb-4">
-          <TabsList className="bg-transparent p-0 h-auto space-x-3 overflow-x-auto no-scrollbar">
-            {subMarketTabs.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className={cn(
-                  "text-xs text-muted-foreground hover:text-foreground px-2 py-1 h-7 rounded-md data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-none",
-                )}
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
         </Tabs>
 
 
