@@ -35,7 +35,6 @@ const iconMenuItems = [
 const mainMarketTabs = [
   { value: 'favorites', label: 'Favorites' },
   { value: 'hot', label: 'Hot' },
-  { value: 'alpha', label: 'Alpha' },
   { value: 'new', label: 'New' },
   { value: 'gainers', label: 'Gainers' },
   { value: 'losers', label: 'Losers' },
@@ -47,7 +46,6 @@ const subMarketTabs = [
   { value: 'all', label: 'All' },
   { value: 'blockchain_l1_l2', label: 'Blockchain L1/L2' },
   { value: 'stablecoin', label: 'Stablecoin' },
-  { value: 'options', label: 'Options' },
   { value: 'new_coin', label: 'New Coin' },
 ];
 
