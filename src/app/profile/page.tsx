@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -10,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit2, Copy, Eye, Gem, UserCheck2, ShieldCheck, Twitter, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
+import ConnectButton from '@/components/app/connect-button';
 
 interface ListItemProps {
   icon: React.ElementType;
@@ -75,7 +75,8 @@ export default function ProfilePage() {
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
             <p className="text-lg font-semibold flex-grow">User-1b6fb</p>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <ConnectButton />
+            <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
               <Edit2 className="h-4 w-4 text-muted-foreground" />
             </Button>
           </div>

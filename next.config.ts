@@ -1,4 +1,3 @@
-
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -20,23 +19,31 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    const cspHeader = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://placehold.co; connect-src 'self'; frame-src 'self';";
     return [
       {
-        // Apply these headers to all routes in your application.
-        source: '/:path*',
+        source: "/(.*)",
         headers: [
           {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: cspHeader.replace(/\s{2,}/g, ' ').trim(), // Basic minification
+            key: "Content-Security-Policy",
+            value: `
+              connect-src 'self'
+              wss://relay.walletconnect.org
+              https://rpc.walletconnect.org
+              https://api.web3modal.org
+              https://cdn.walletconnect.com
+              https://*.walletconnect.com
+              https://pulse.walletconnect.org;
+            `.replace(/\s{2,}/g, ' ').trim(),
           },
         ],
       },
-    ]
+    ];
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push("pino-pretty", "lokijs", "encoding");
+    }
+    return config;
   },
 };
 
