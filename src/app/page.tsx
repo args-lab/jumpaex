@@ -18,18 +18,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { mockMarketAssets, formatMarketPrice } from '@/data/mock';
 import type { MarketAsset } from '@/types';
-import { Gift, PiggyBank, Users, Trophy, LayoutGrid, ChevronDown } from 'lucide-react';
+import { ChevronDown, ArrowDownToLine, ArrowUpFromLine, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 
 
 const iconMenuItems = [
-  { label: 'Rewards Hub', icon: Gift, href: '#' },
-  { label: 'Earn', icon: PiggyBank, href: '#' },
-  { label: 'Referral', icon: Users, href: '#' },
-  { label: 'Traders League', icon: Trophy, href: '#' },
-  { label: 'More', icon: LayoutGrid, href: '#' },
+  { label: 'Deposit', icon: ArrowDownToLine, href: '/wallet' }, // Updated
+  { label: 'Withdraw', icon: ArrowUpFromLine, href: '/wallet' }, // Updated
+  { label: 'Transfer', icon: ArrowRightLeft, href: '#' }, // Updated
 ];
 
 const subMarketTabs = [
@@ -80,6 +78,34 @@ export default function HomePage() {
     setIsAddFundsModalOpen(false);
   };
 
+  // Specific handlers for new icon menu items
+  const handleDepositClick = () => {
+    // Option 1: Open the existing AddFundsModal which then can lead to DepositCryptoModal
+    // setIsAddFundsModalOpen(true); 
+    // Option 2: Directly open the DepositCryptoModal
+    setIsActualDepositCryptoModalOpen(true);
+  };
+
+  const handleWithdrawClick = () => {
+    // Assuming you will create a WithdrawModal similar to DepositModal
+    // For now, let's use toast as a placeholder or navigate to wallet page if WithdrawModal isn't separate
+    toast({ title: 'Navigate', description: 'Withdraw functionality (mock)...' });
+    // Example: router.push('/wallet/withdraw'); or open a specific withdraw modal
+    // For now, will also take user to /wallet page where withdraw modal can be triggered
+    // This matches the href provided
+  };
+  
+  const handleTransferClick = () => {
+     toast({ title: 'Navigate', description: 'Transfer functionality (mock)...' });
+  };
+
+  // Map actions to labels
+  const iconMenuActions: Record<string, () => void> = {
+    'Deposit': handleDepositClick,
+    'Withdraw': handleWithdrawClick,
+    'Transfer': handleTransferClick,
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -103,9 +129,25 @@ export default function HomePage() {
         </div>
 
         {/* Icon Grid Menu */}
-        <div className="grid grid-cols-5 gap-2 mb-8 text-center">
+        <div className={cn(
+            "grid gap-2 mb-8 text-center",
+            iconMenuItems.length === 3 ? "grid-cols-3" : // Adjust grid columns based on number of items
+            iconMenuItems.length === 4 ? "grid-cols-4" :
+            "grid-cols-5" // Default or for 5 items
+        )}>
           {iconMenuItems.map((item) => (
-            <a key={item.label} href={item.href} className="flex flex-col items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
+            <a 
+              key={item.label} 
+              href={item.href} 
+              onClick={(e) => {
+                if (iconMenuActions[item.label]) {
+                  e.preventDefault(); // Prevent default href navigation if custom action exists
+                  iconMenuActions[item.label]();
+                }
+                // If no specific action, href will be followed
+              }}
+              className="flex flex-col items-center p-2 rounded-lg hover:bg-muted/50 transition-colors"
+            >
               <div className="flex items-center justify-center h-10 w-10 mb-1.5 bg-muted/70 rounded-lg">
                 <item.icon className="h-5 w-5 text-foreground/80" />
               </div>
