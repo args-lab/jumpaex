@@ -43,8 +43,8 @@ export default function ConnectWalletPage() {
               {isConnected ? 'Wallet Connected' : 'Connect Your Wallet'}
             </CardTitle>
             <CardDescription>
-              {isConnected 
-                ? 'Manage your connection or disconnect.' 
+              {isConnected
+                ? 'Manage your connection or disconnect.'
                 : 'Securely connect to decentralized applications using Web3Modal.'}
             </CardDescription>
           </CardHeader>
