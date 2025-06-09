@@ -2,9 +2,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 import { TanstackQueryProvider } from '@/components/providers/TanstackQueryProvider';
-import { Web3ModalProvider } from '@/components/providers/Web3ModalProvider';
 
 export const metadata: Metadata = {
   title: 'AnonTrade',
@@ -26,12 +24,8 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <TanstackQueryProvider>
-          <Web3ModalProvider>
             {children}
             <Toaster />
-            {/* BottomNavigationBar might be part of individual page layouts or here if truly global */}
-            {/* For now, assuming BottomNavigationBar is not always part of the core layout if some pages (like /connect) might not need it directly above content */}
-          </Web3ModalProvider>
         </TanstackQueryProvider>
       </body>
     </html>

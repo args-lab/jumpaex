@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Store, Repeat, WalletCards, User, Link as LinkIcon } from 'lucide-react';
+import { Home, Store, Repeat, WalletCards, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,6 @@ export function BottomNavigationBar() {
     { href: '/market', label: 'Market', icon: Store },
     { href: '/convert', label: 'Convert', icon: Repeat },
     { href: '/assets', label: 'Assets', icon: WalletCards },
-    { href: '/connect', label: 'Connect', icon: LinkIcon },
     { href: '/profile', label: 'Profile', icon: User },
   ];
 
@@ -24,7 +23,7 @@ export function BottomNavigationBar() {
       <div className="container mx-auto h-full">
         <ul className="flex justify-around items-center h-full">
           {navItems.map((item) => {
-            const IconComponent = item.icon; // Assign to a capitalized variable
+            const IconComponent = item.icon; 
             return (
               <li key={item.label} className="flex-1 text-center">
                 <Button
@@ -36,7 +35,7 @@ export function BottomNavigationBar() {
                   asChild
                 >
                   <Link href={item.href}>
-                    {IconComponent ? <IconComponent className="h-5 w-5 mb-0.5" /> : null} {/* Check if IconComponent is truthy */}
+                    {IconComponent ? <IconComponent className="h-5 w-5 mb-0.5" /> : null} 
                     <span className="text-xs leading-tight">{item.label}</span>
                   </Link>
                 </Button>
