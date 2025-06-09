@@ -19,7 +19,7 @@ if (!projectId) {
 const metadata = {
   name: 'appkit-example',
   description: 'AppKit Example',
-  url: 'https://appkitexampleapp.com', // origin must match your domain & subdomain
+  url: window.location.origin, // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
