@@ -26,13 +26,21 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: `
+              default-src 'self';
+              script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.walletconnect.com https://*.walletconnect.com https://api.web3modal.org;
+              style-src 'self' 'unsafe-inline';
+              img-src 'self' data: blob: https://cdn.walletconnect.com https://*.walletconnect.com https://api.web3modal.org;
+              font-src 'self' https://cdn.walletconnect.com https://*.walletconnect.com;
               connect-src 'self'
-              wss://relay.walletconnect.org
-              https://rpc.walletconnect.org
-              https://api.web3modal.org
-              https://cdn.walletconnect.com
-              https://*.walletconnect.com
-              https://pulse.walletconnect.org;
+                wss://relay.walletconnect.org
+                https://rpc.walletconnect.org
+                https://api.web3modal.org
+                https://cdn.walletconnect.com
+                https://*.walletconnect.com
+                https://pulse.walletconnect.org;
+              frame-src 'self';
+              object-src 'none';
+              base-uri 'self';
             `.replace(/\s{2,}/g, ' ').trim(),
           },
         ],
