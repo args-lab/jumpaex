@@ -2,14 +2,12 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TanstackQueryProvider } from '@/components/providers/TanstackQueryProvider';
 
 export const metadata: Metadata = {
   title: 'AnonTrade',
   description: 'P2P Crypto Trading Telegram Mini App',
 };
-
-const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -25,11 +23,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <QueryClientProvider client={queryClient}>
+        <TanstackQueryProvider>
             {children}
             <Toaster />
             <BottomNavigationBar />
-        </QueryClientProvider>
+        </TanstackQueryProvider>
       </body>
     </html>
   );
