@@ -45,10 +45,10 @@ const mainMarketTabs = [
 
 const subMarketTabs = [
   { value: 'all', label: 'All' },
-  { value: 'spot', label: 'Spot' },
-  { value: 'futures', label: 'Futures' },
+  { value: 'blockchain_l1_l2', label: 'Blockchain L1/L2' },
+  { value: 'stablecoin', label: 'Stablecoin' },
   { value: 'options', label: 'Options' },
-  { value: 'alpha_sub', label: 'Alpha' },
+  { value: 'new_coin', label: 'New Coin' },
 ];
 
 export default function HomePage() {
