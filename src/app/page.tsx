@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { mockMarketAssets, formatMarketPrice } from '@/data/mock';
 import type { MarketAsset } from '@/types';
-import { Gift, PiggyBank, Users, Trophy, LayoutGrid, ChevronDown, Menu } from 'lucide-react';
+import { Gift, PiggyBank, Users, Trophy, LayoutGrid, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
@@ -130,10 +130,6 @@ export default function HomePage() {
                 </TabsTrigger>
               ))}
             </TabsList>
-             {/* Optional: Keep a menu button if there are other actions related to markets, or remove if not needed */}
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground ml-2 shrink-0">
-                <Menu className="h-5 w-5"/>
-            </Button>
           </div>
         </Tabs>
 
