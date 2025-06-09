@@ -28,9 +28,9 @@ const nextConfig: NextConfig = {
             value: `
               default-src 'self';
               script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.walletconnect.com https://*.walletconnect.com https://api.web3modal.org;
-              style-src 'self' 'unsafe-inline';
+              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
               img-src 'self' data: blob: https://cdn.walletconnect.com https://*.walletconnect.com https://api.web3modal.org;
-              font-src 'self' https://cdn.walletconnect.com https://*.walletconnect.com;
+              font-src 'self' https://fonts.gstatic.com https://cdn.walletconnect.com https://*.walletconnect.com;
               connect-src 'self'
                 wss://relay.walletconnect.org
                 https://rpc.walletconnect.org
