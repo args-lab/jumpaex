@@ -25,9 +25,9 @@ import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 
 
 const iconMenuItems = [
-  { label: 'Deposit', icon: ArrowDownToLine, href: '/wallet' }, // Updated
-  { label: 'Withdraw', icon: ArrowUpFromLine, href: '/wallet' }, // Updated
-  { label: 'Transfer', icon: ArrowRightLeft, href: '#' }, // Updated
+  { label: 'Deposit', icon: ArrowDownToLine, href: '#' }, 
+  { label: 'Withdraw', icon: ArrowUpFromLine, href: '#' }, 
+  { label: 'Transfer', icon: ArrowRightLeft, href: '#' },
 ];
 
 const subMarketTabs = [
@@ -51,24 +51,21 @@ export default function HomePage() {
     }
     // Mock balance initialization
     const balance = 0.26212233; // As per image
-    setTotalBalanceUSD(balance.toLocaleString(navigator.language || undefined, { // Added undefined fallback for navigator.language
+    setTotalBalanceUSD(balance.toLocaleString(navigator.language || undefined, { 
       minimumFractionDigits: 8,
       maximumFractionDigits: 8,
     }));
   }, []);
 
-  // Filter assets based on tabs (mock implementation)
   const displayedMarketAssets = useMemo(() => {
-    // In a real app, filtering would happen here based on activeSubTab
     return mockMarketAssets;
   }, [activeSubTab]);
 
   const handleOpenActualDepositModal = () => {
-    setIsAddFundsModalOpen(false); // Close the AddFundsModal
-    setIsActualDepositCryptoModalOpen(true); // Open the actual DepositCryptoModal
+    setIsAddFundsModalOpen(false); 
+    setIsActualDepositCryptoModalOpen(true); 
   };
 
-  // Placeholder navigation/action handlers for options other than P2P
   const handleNavigateToBuyWithFiat = () => {
     toast({ title: 'Navigate', description: 'Redirecting to Buy with Fiat page (mock)...' });
     setIsAddFundsModalOpen(false);
@@ -78,28 +75,18 @@ export default function HomePage() {
     setIsAddFundsModalOpen(false);
   };
 
-  // Specific handlers for new icon menu items
   const handleDepositClick = () => {
-    // Option 1: Open the existing AddFundsModal which then can lead to DepositCryptoModal
-    // setIsAddFundsModalOpen(true); 
-    // Option 2: Directly open the DepositCryptoModal
-    setIsActualDepositCryptoModalOpen(true);
+    setIsAddFundsModalOpen(true); // Open the main AddFundsModal
   };
 
   const handleWithdrawClick = () => {
-    // Assuming you will create a WithdrawModal similar to DepositModal
-    // For now, let's use toast as a placeholder or navigate to wallet page if WithdrawModal isn't separate
     toast({ title: 'Navigate', description: 'Withdraw functionality (mock)...' });
-    // Example: router.push('/wallet/withdraw'); or open a specific withdraw modal
-    // For now, will also take user to /wallet page where withdraw modal can be triggered
-    // This matches the href provided
   };
   
   const handleTransferClick = () => {
      toast({ title: 'Navigate', description: 'Transfer functionality (mock)...' });
   };
 
-  // Map actions to labels
   const iconMenuActions: Record<string, () => void> = {
     'Deposit': handleDepositClick,
     'Withdraw': handleWithdrawClick,
@@ -110,7 +97,6 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <main className="flex-grow container mx-auto px-4 pt-6 pb-20">
-        {/* Top Section: Balance and Add Funds */}
         <div className="flex justify-between items-start mb-6">
           <div>
             <div className="text-xs text-muted-foreground flex items-center">
@@ -122,18 +108,17 @@ export default function HomePage() {
           </div>
           <Button
             className="bg-accent hover:bg-accent/90 text-accent-foreground h-9 px-4 text-sm"
-            onClick={() => setIsAddFundsModalOpen(true)}
+            onClick={() => setIsAddFundsModalOpen(true)} // This button also opens AddFundsModal
           >
             Add Funds
           </Button>
         </div>
 
-        {/* Icon Grid Menu */}
         <div className={cn(
             "grid gap-2 mb-8 text-center",
-            iconMenuItems.length === 3 ? "grid-cols-3" : // Adjust grid columns based on number of items
+            iconMenuItems.length === 3 ? "grid-cols-3" : 
             iconMenuItems.length === 4 ? "grid-cols-4" :
-            "grid-cols-5" // Default or for 5 items
+            "grid-cols-5" 
         )}>
           {iconMenuItems.map((item) => (
             <a 
@@ -141,10 +126,9 @@ export default function HomePage() {
               href={item.href} 
               onClick={(e) => {
                 if (iconMenuActions[item.label]) {
-                  e.preventDefault(); // Prevent default href navigation if custom action exists
+                  e.preventDefault(); 
                   iconMenuActions[item.label]();
                 }
-                // If no specific action, href will be followed
               }}
               className="flex flex-col items-center p-2 rounded-lg hover:bg-muted/50 transition-colors"
             >
@@ -156,7 +140,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Market Sub Tabs */}
         <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="mb-4">
           <div className="flex justify-between items-center">
             <TabsList className="bg-transparent p-0 h-auto space-x-3 overflow-x-auto no-scrollbar">
@@ -176,7 +159,6 @@ export default function HomePage() {
         </Tabs>
 
 
-        {/* Asset List Table */}
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

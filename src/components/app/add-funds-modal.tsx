@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -9,13 +9,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, CreditCard, Navigation, ArrowDownToLine, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Users, CreditCard, ArrowDownToLine, ChevronRight, Store } from 'lucide-react';
 import type * as React from 'react';
 
 interface AddFundsModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  // onNavigateToP2P: () => void; // This will be handled internally now
   onNavigateToBuyWithFiat: () => void;
   onNavigateToReceive: () => void;
   onOpenDepositCryptoModal: () => void;
@@ -47,27 +46,44 @@ const OptionCard: React.FC<OptionCardProps> = ({ icon: Icon, title, description,
 export function AddFundsModal({
   isOpen,
   onOpenChange,
-  // onNavigateToP2P, // Removed from props
   onNavigateToBuyWithFiat,
   onNavigateToReceive,
   onOpenDepositCryptoModal,
 }: AddFundsModalProps) {
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter(); 
 
   const handleNavigateToP2P = () => {
     router.push('/market');
-    onOpenChange(false); // Close the modal after navigation
+    onOpenChange(false); 
   };
 
-  const optionsNoCrypto = [
-    { icon: Users, title: 'Buy with IDR (P2P)', description: 'Buy from users. Competitive prices. Local payments', action: handleNavigateToP2P }, // Updated action
-    { icon: CreditCard, title: 'Buy with IDR', description: 'Buy crypto easily via bank transfer, card, and more.', action: onNavigateToBuyWithFiat },
-    { icon: Navigation, title: 'Receive via Pay', description: 'Receive crypto from other Binance users', action: onNavigateToReceive },
+  const depositOptions = [
+    { 
+      icon: ArrowDownToLine, 
+      title: 'On-Chain Deposit', 
+      description: 'Deposit Crypto from other exchanges/wallets to Binance', 
+      action: onOpenDepositCryptoModal 
+    },
+    { 
+      icon: Users, 
+      title: 'Receive from Binance users', 
+      description: 'Binance internal transfer, receive via Email/Phone/ID', 
+      action: onNavigateToReceive 
+    },
+    { 
+      icon: CreditCard, 
+      title: 'Buy with IDR', 
+      description: 'Buy crypto easily via bank transfer, card, and more.', 
+      action: onNavigateToBuyWithFiat 
+    },
+    { 
+      icon: Store, 
+      title: 'P2P Trading', 
+      description: 'Buy directly from users. Competitive pricing. Local payments.', 
+      action: handleNavigateToP2P 
+    },
   ];
 
-  const optionsHaveCrypto = [
-    { icon: ArrowDownToLine, title: 'Deposit Crypto', description: 'Send crypto to your Binance Account', action: onOpenDepositCryptoModal },
-  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -76,8 +92,8 @@ export function AddFundsModal({
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <DialogTitle className="sr-only">Add Funds Options</DialogTitle>
-          <Button variant="outline" size="sm" className="text-xs h-8 px-2.5 bg-card hover:bg-card/90 border-border">
+          <DialogTitle className="text-base font-semibold">Select Deposit Method</DialogTitle>
+          <Button variant="outline" size="sm" className="text-xs h-8 px-2.5 bg-card hover:bg-card/90 border-border invisible"> {/* Made currency button invisible as per new design */}
             <div className="flex items-center justify-center h-5 w-5 mr-1.5 rounded-full bg-red-600 text-white text-[9px] font-semibold leading-none">
               Rp
             </div>
@@ -85,24 +101,17 @@ export function AddFundsModal({
           </Button>
         </DialogHeader>
 
-        <div className="flex-grow overflow-y-auto p-4 space-y-5">
-          <div>
-            <h2 className="text-base font-semibold mb-2.5 ml-1">I don't have crypto assets</h2>
-            <div className="space-y-3">
-              {optionsNoCrypto.map((opt, index) => (
-                <OptionCard key={index} icon={opt.icon} title={opt.title} description={opt.description} onClick={opt.action} />
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-2">
-             <h2 className="text-base font-semibold mb-2.5 ml-1">I have crypto assets</h2>
-            <div className="space-y-3">
-              {optionsHaveCrypto.map((opt, index) => (
-                <OptionCard key={index} icon={opt.icon} title={opt.title} description={opt.description} onClick={opt.action} />
-              ))}
-            </div>
-          </div>
+        <div className="flex-grow overflow-y-auto p-4 space-y-3">
+          {depositOptions.map((opt, index) => (
+            <OptionCard 
+              key={index} 
+              icon={opt.icon} 
+              title={opt.title} 
+              description={opt.description} 
+              onClick={opt.action} 
+              showChevron={false} // Chevron is not shown in the reference image for these options
+            />
+          ))}
         </div>
       </DialogContent>
     </Dialog>
