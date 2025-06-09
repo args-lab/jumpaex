@@ -1,7 +1,7 @@
 
 'use client';
 
-import * as React from 'react'; // Added React import
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit2, Copy, Eye, Gem, UserCheck2, ShieldCheck, Twitter, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 
 interface ListItemProps {
   icon: React.ElementType;
@@ -121,6 +122,7 @@ export default function ProfilePage() {
           Log Out
         </Button>
       </footer>
+      <BottomNavigationBar />
     </div>
   );
 }

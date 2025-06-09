@@ -21,6 +21,7 @@ import type { MarketAsset } from '@/types';
 import { Gift, PiggyBank, Users, Trophy, LayoutGrid, ChevronDown, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 
 
 const iconMenuItems = [
@@ -47,7 +48,7 @@ const subMarketTabs = [
   { value: 'spot', label: 'Spot' },
   { value: 'futures', label: 'Futures' },
   { value: 'options', label: 'Options' },
-  { value: 'alpha_sub', label: 'Alpha' }, 
+  { value: 'alpha_sub', label: 'Alpha' },
 ];
 
 export default function HomePage() {
@@ -65,7 +66,7 @@ export default function HomePage() {
     }
     // Mock balance initialization
     const balance = 0.26212233; // As per image
-    setTotalBalanceUSD(balance.toLocaleString(navigator.language, {
+    setTotalBalanceUSD(balance.toLocaleString(navigator.language || undefined, { // Added undefined fallback for navigator.language
       minimumFractionDigits: 8,
       maximumFractionDigits: 8,
     }));
@@ -147,7 +148,7 @@ export default function HomePage() {
             </Button>
           </div>
         </Tabs>
-        
+
         <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="mb-4">
           <TabsList className="bg-transparent p-0 h-auto space-x-3 overflow-x-auto no-scrollbar">
             {subMarketTabs.map((tab) => (
@@ -209,15 +210,15 @@ export default function HomePage() {
           </Table>
         </div>
       </main>
-      <AddFundsModal 
-        isOpen={isAddFundsModalOpen} 
+      <AddFundsModal
+        isOpen={isAddFundsModalOpen}
         onOpenChange={setIsAddFundsModalOpen}
-        // onNavigateToP2P is handled internally by AddFundsModal now
         onNavigateToBuyWithFiat={handleNavigateToBuyWithFiat}
         onNavigateToReceive={handleNavigateToReceive}
         onOpenDepositCryptoModal={handleOpenActualDepositModal}
       />
       <DepositModal isOpen={isActualDepositCryptoModalOpen} onOpenChange={setIsActualDepositCryptoModalOpen} />
+      <BottomNavigationBar />
     </div>
   );
 }
