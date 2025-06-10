@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit2, Copy, Eye, Gem, UserCheck2, ShieldCheck, Twitter, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit2, Copy, Eye, Gem, UserCheck2, ShieldCheck, Send, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BottomNavigationBar } from '@/components/app/bottom-navigation-bar';
 import ConnectButton from '@/components/app/connect-button';
-import { useAccount } from 'wagmi';
-import { useAppKit } from '@reown/appkit/react'; // Added import for useAppKit
+import { useAccount, useDisconnect } from 'wagmi';
+import { useAppKit } from '@reown/appkit/react';
 
 interface ListItemProps {
   icon: React.ElementType;
@@ -49,15 +49,18 @@ const ListItem: React.FC<ListItemProps> = ({ icon: Icon, label, value, valueType
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { isConnected } = useAccount();
-  const { open } = useAppKit(); // Initialize useAppKit hook
+  const { address, chain, isConnected } = useAccount();
+  const { open } = useAppKit();
+  const { disconnect } = useDisconnect();
 
   const listItems: ListItemProps[] = [
     { icon: Gem, label: 'VIP Privilege', value: 'Regular', valueType: 'accent', onClick: () => alert('VIP Privilege clicked') },
     { icon: UserCheck2, label: 'Verifications', value: 'Verified', valueType: 'success', onClick: () => alert('Verifications clicked') },
     { icon: ShieldCheck, label: 'Security', onClick: () => alert('Security clicked') },
-    { icon: Twitter, label: 'Twitter', value: 'Unlinked', valueType: 'muted', onClick: () => alert('Twitter clicked') },
+    { icon: Send, label: 'Telegram', value: 'Unlinked', valueType: 'muted', onClick: () => alert('Telegram clicked') },
   ];
+
+  const formattedAddress = address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : 'N/A';
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/30">
@@ -77,10 +80,10 @@ export default function ProfilePage() {
             <div className="bg-card p-4 rounded-lg border shadow-sm">
               <div className="flex items-center mb-4">
                 <Avatar className="h-12 w-12 mr-4">
-                  <AvatarImage src="https://placehold.co/100x100.png" alt="User-1b6fb" data-ai-hint="avatar person" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage src="https://placehold.co/100x100.png" alt={address || 'User'} data-ai-hint="avatar person" />
+                  <AvatarFallback>{address ? address.substring(2,4).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
-                <p className="text-lg font-semibold flex-grow">User-1b6fb</p>
+                <p className="text-lg font-semibold flex-grow">{formattedAddress}</p>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Edit2 className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -88,12 +91,18 @@ export default function ProfilePage() {
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">UID</span>
+                  <span className="text-muted-foreground">Address</span>
                   <div className="flex items-center">
-                    <span className="font-medium">209211373</span>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-1 text-muted-foreground hover:text-foreground">
+                    <span className="font-medium">{formattedAddress}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-1 text-muted-foreground hover:text-foreground" onClick={() => navigator.clipboard.writeText(address || '')}>
                       <Copy className="h-3.5 w-3.5" />
                     </Button>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Network</span>
+                  <div className="flex items-center">
+                    <span className="font-medium">{chain?.name || 'N/A'}</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
@@ -121,13 +130,20 @@ export default function ProfilePage() {
 
           {/* Page-specific Footer for buttons */}
           <footer className="fixed bottom-16 left-0 right-0 z-20 p-3 border-t bg-background flex gap-3">
-            <Button 
+            <Button
               className="flex-1 h-11 text-sm bg-accent hover:bg-accent/90 text-accent-foreground"
-              onClick={() => open()} // Changed onClick to open AppKit modal
+              onClick={() => open()}
             >
-              Change Network {/* Changed text from Switch Account */}
+              Change Network
             </Button>
-            <Button variant="outline" className="flex-1 h-11 text-sm bg-muted hover:bg-muted/80 text-foreground">
+            <Button
+              variant="outline"
+              className="flex-1 h-11 text-sm bg-muted hover:bg-muted/80 text-foreground"
+              onClick={() => {
+                disconnect();
+                window.location.reload();
+              }}
+            >
               Log Out
             </Button>
           </footer>

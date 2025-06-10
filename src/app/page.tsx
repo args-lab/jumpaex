@@ -106,12 +106,12 @@ export default function HomePage() {
               ${totalBalanceUSD !== null ? totalBalanceUSD : '0.00000000'}
             </div>
           </div>
-          <Button
+          {/* <Button
             className="bg-accent hover:bg-accent/90 text-accent-foreground h-9 px-4 text-sm"
             onClick={() => setIsAddFundsModalOpen(true)} // This button also opens AddFundsModal
           >
             Add Funds
-          </Button>
+          </Button> */}
         </div>
 
         <div className={cn(
