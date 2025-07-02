@@ -85,7 +85,7 @@ async function fetchMarketPrices(): Promise<MarketPrices> {
     }
 }
 
-async function getPairsWithPrices(): Promise<FinalPairInfo[]> {
+export async function getPairsWithPrices(): Promise<FinalPairInfo[]> { // Added export
     try {
         const [pairsData, marketPricesData] = await Promise.all([fetchPairs(), fetchMarketPrices()]);
         

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -16,8 +15,9 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { mockMarketAssets, formatMarketPrice } from '@/data/mock';
+import { formatMarketPrice, MOCK_CONVERSION_RATES } from '@/data/mock'; // Added MOCK_CONVERSION_RATES
 import type { MarketAsset } from '@/types';
+import { getPairsWithPrices } from '@/types/market_data_feed'; // Added
 import { ChevronDown, ArrowDownToLine, ArrowUpFromLine, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +37,9 @@ const subMarketTabs = [
   { value: 'new_coin', label: 'New Coin' },
 ];
 
+const L1_L2_ASSETS = ['BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'DOT', 'AVAX', 'MATIC', 'XRP', 'DOGE', 'SHIB', 'LINK', 'TRX', 'ICP', 'ETC', 'XLM', 'NEAR', 'ATOM', 'ALGO', 'FTM'];
+const STABLECOINS = ['USDT', 'USDC', 'DAI', 'IDRT', 'BIDR']; // Common stablecoins, IDRT/BIDR for Indodax
+
 export default function HomePage() {
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false);
   const [isActualDepositCryptoModalOpen, setIsActualDepositCryptoModalOpen] = useState(false);
@@ -44,6 +47,7 @@ export default function HomePage() {
   const [activeSubTab, setActiveSubTab] = useState('all');
   const [locale, setLocale] = useState<string | undefined>(undefined);
   const { toast } = useToast();
+  const [indodaxMarketData, setIndodaxMarketData] = useState<MarketAsset[]>([]); // Added
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -57,9 +61,125 @@ export default function HomePage() {
     }));
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const rawPairs = await getPairsWithPrices();
+        if (!rawPairs || rawPairs.length === 0) {
+          console.warn("Failed to fetch Indodax data or no pairs returned.");
+          setIndodaxMarketData([]);
+          return;
+        }
+
+        const usdRateForQuoteAsset: { [assetSymbol: string]: number } = {
+          'USDT': 1,
+          'IDR': MOCK_CONVERSION_RATES.IDR || (1 / 16200), // Using a common rate for IDR
+        };
+
+        // First pass: get USD prices for common quote currencies like BTC, ETH from their USDT/IDR pairs
+        rawPairs.forEach(pair => {
+          const base = pair.base_currency.toUpperCase();
+          const tickerId = pair.ticker_id.toLowerCase();
+          const parts = tickerId.split('_');
+          if (parts.length !== 2) return;
+
+          const currentPairBase = parts[0].toUpperCase();
+          const currentPairQuote = parts[1].toUpperCase();
+          
+          // Ensure the base_currency from the pair matches the base part of ticker_id for safety
+          if (currentPairBase !== base && !tickerId.startsWith(base.toLowerCase()+'_')) return;
+
+
+          if (pair.last) {
+            if (currentPairQuote === 'USDT') {
+              usdRateForQuoteAsset[base] = parseFloat(pair.last);
+            } else if (currentPairQuote === 'IDR') {
+              usdRateForQuoteAsset[base] = parseFloat(pair.last) * usdRateForQuoteAsset['IDR'];
+            }
+          }
+        });
+        
+        const transformedData: MarketAsset[] = rawPairs.map(pair => {
+          const baseAsset = pair.base_currency.toUpperCase();
+          const tickerIdLower = pair.ticker_id.toLowerCase();
+          const baseCurrencyLower = pair.base_currency.toLowerCase();
+          let quoteAsset = '';
+
+          if (tickerIdLower.startsWith(baseCurrencyLower + '_')) {
+            quoteAsset = tickerIdLower.substring(baseCurrencyLower.length + 1).toUpperCase();
+          } else {
+            const parts = tickerIdLower.split('_');
+            if (parts.length > 1) {
+              quoteAsset = parts[parts.length - 1].toUpperCase();
+            } else {
+              console.warn(`Cannot determine quote asset for ticker_id: ${pair.ticker_id}, base: ${baseAsset}`);
+              return null; 
+            }
+          }
+          if (!quoteAsset) return null;
+
+          const lastPrice = parseFloat(pair.last || '0');
+          let lastPriceUSD = 0;
+
+          if (quoteAsset === 'USDT') {
+            lastPriceUSD = lastPrice;
+          } else if (quoteAsset === 'IDR') {
+            lastPriceUSD = lastPrice * (MOCK_CONVERSION_RATES.IDR || (1 / 16200));
+          } else {
+            const priceOfQuoteInUSD = usdRateForQuoteAsset[quoteAsset];
+            if (priceOfQuoteInUSD !== undefined) {
+              lastPriceUSD = lastPrice * priceOfQuoteInUSD;
+            } else {
+              // Default to 0 if no direct conversion path found for the quote asset
+              lastPriceUSD = 0;
+            }
+          }
+          
+          return {
+            id: pair.ticker_id,
+            pair: `${baseAsset}/${quoteAsset}`,
+            baseAsset,
+            quoteAsset,
+            lastPrice,
+            lastPriceUSD,
+            change24h: 0, // Not available from this Indodax endpoint combination
+          };
+        }).filter(asset => asset !== null) as MarketAsset[];
+
+        setIndodaxMarketData(transformedData);
+      } catch (error) {
+        console.error("Error fetching or transforming Indodax market data:", error);
+        setIndodaxMarketData([]);
+      }
+    };
+
+    fetchData();
+    const intervalId = setInterval(fetchData, 10000); // Poll every 10 seconds
+    return () => clearInterval(intervalId);
+  }, []);
+
+
   const displayedMarketAssets = useMemo(() => {
-    return mockMarketAssets;
-  }, [activeSubTab]);
+    const baseFiltered = indodaxMarketData.filter(
+      asset => asset.quoteAsset === 'IDR' || asset.quoteAsset === 'USDT'
+    );
+
+    switch (activeSubTab) {
+      case 'all':
+        return baseFiltered;
+      case 'blockchain_l1_l2':
+        return baseFiltered.filter(asset => L1_L2_ASSETS.includes(asset.baseAsset));
+      case 'stablecoin':
+        return baseFiltered.filter(asset => STABLECOINS.includes(asset.baseAsset));
+      case 'new_coin':
+        // For "New Coin", as API doesn't provide this, we can show a slice or all.
+        // Or sort by a proxy if available (e.g. recently added if we had that info)
+        // For now, showing all IDR/USDT pairs like 'all' or a limited number.
+        return baseFiltered.slice(0, 20); // Example: show top 20 by default order
+      default:
+        return baseFiltered;
+    }
+  }, [indodaxMarketData, activeSubTab]);
 
   const handleOpenActualDepositModal = () => {
     setIsAddFundsModalOpen(false); 
